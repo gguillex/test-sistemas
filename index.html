@@ -1,0 +1,2453 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulacro Examen — Sistemas Inteligentes</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Bricolage+Grotesque:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --bg: #f5f2eb;
+  --surface: #ffffff;
+  --surface2: #f0ece2;
+  --ink: #1a1712;
+  --ink2: #4a4640;
+  --muted: #9a9088;
+  --border: #d8d0c4;
+  --p1: #c84b2f;
+  --p2: #2f7dc8;
+  --t3: #00897b;
+  --t4: #7b2cbf;
+  --correct: #1a7a4a;
+  --correct-bg: #e8f5ee;
+  --wrong: #c83030;
+  --wrong-bg: #fde8e8;
+  --neutral-bg: #ede9e0;
+  --gold: #c8921a;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Bricolage Grotesque', sans-serif;
+  min-height: 100vh;
+}
+
+/* HEADER */
+.header {
+  background: var(--ink);
+  color: var(--bg);
+  padding: 2rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 20px,
+    rgba(255,255,255,0.03) 20px,
+    rgba(255,255,255,0.03) 21px
+  );
+}
+
+.header h1 {
+  font-size: clamp(1.6rem, 4vw, 2.8rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  position: relative;
+}
+
+.header p {
+  color: rgba(245,242,235,0.6);
+  font-size: 0.9rem;
+  margin-top: 0.4rem;
+  font-family: 'IBM Plex Mono', monospace;
+  position: relative;
+}
+
+/* SCOREBOARD */
+#scoreboard {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  background: var(--ink);
+  padding: 1rem 2rem 1.5rem;
+  flex-wrap: wrap;
+}
+
+.score-item {
+  text-align: center;
+}
+
+.score-num {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--bg);
+  font-family: 'IBM Plex Mono', monospace;
+  line-height: 1;
+}
+
+.score-num.correct { color: #5ddc8a; }
+.score-num.wrong { color: #f07070; }
+.score-num.pending { color: #f0c040; }
+
+.score-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgba(245,242,235,0.5);
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.progress-bar-wrap {
+  width: 100%;
+  max-width: 600px;
+  height: 4px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px;
+  margin: 0 auto;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #5ddc8a, #40c0f0);
+  border-radius: 2px;
+  transition: width 0.4s ease;
+  width: 0%;
+}
+
+/* FILTERS */
+.filters {
+  display: flex;
+  gap: 0.5rem;
+  padding: 1.25rem 1.5rem;
+  flex-wrap: wrap;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+}
+
+.filter-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  font-family: 'IBM Plex Mono', monospace;
+  margin-right: 0.25rem;
+}
+
+.filter-btn {
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--ink2);
+  font-size: 0.8rem;
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.filter-btn:hover { border-color: var(--ink); color: var(--ink); }
+.filter-btn.active-all { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.filter-btn.active-p1 { background: var(--p1); color: white; border-color: var(--p1); }
+.filter-btn.active-p2 { background: var(--p2); color: white; border-color: var(--p2); }
+.filter-btn.active-t3 { background: var(--t3); color: white; border-color: var(--t3); }
+.filter-btn.active-t4 { background: var(--t4); color: white; border-color: var(--t4); }
+
+.btn-reset {
+  margin-left: auto;
+  padding: 0.35rem 1rem;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--ink2);
+  font-size: 0.8rem;
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-reset:hover { background: var(--wrong-bg); border-color: var(--wrong); color: var(--wrong); }
+
+/* QUIZ CONTAINER */
+.quiz-container {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 4rem;
+}
+
+/* QUESTION CARD */
+.q-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  margin-bottom: 1.25rem;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.q-card.answered-correct { border-color: var(--correct); }
+.q-card.answered-wrong { border-color: var(--wrong); }
+
+.q-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1.25rem 1.5rem 1rem;
+}
+
+.q-num {
+  background: var(--neutral-bg);
+  color: var(--muted);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  white-space: nowrap;
+  margin-top: 0.15rem;
+  flex-shrink: 0;
+}
+
+.q-tag {
+  font-size: 0.65rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  white-space: nowrap;
+  margin-top: 0.15rem;
+  flex-shrink: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.q-tag.p1 { background: #fde8e3; color: var(--p1); }
+.q-tag.p2 { background: #e3eefe; color: var(--p2); }
+.q-tag.t3 { background: #e0f2f1; color: var(--t3); }
+.q-tag.t4 { background: #f3e6ff; color: var(--t4); }
+
+.q-text {
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.q-options {
+  padding: 0 1.5rem 1.25rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.opt-btn {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.7rem 1rem;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: var(--bg);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s;
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 0.9rem;
+  color: var(--ink);
+  width: 100%;
+}
+
+.opt-btn:hover:not(:disabled) {
+  border-color: var(--ink);
+  background: var(--surface2);
+}
+
+.opt-btn:disabled { cursor: default; }
+
+.opt-letter {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--surface2);
+  color: var(--muted);
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 0.05rem;
+  transition: all 0.15s;
+}
+
+.opt-btn.correct-ans {
+  background: var(--correct-bg);
+  border-color: var(--correct);
+  color: var(--correct);
+}
+
+.opt-btn.correct-ans .opt-letter {
+  background: var(--correct);
+  color: white;
+}
+
+.opt-btn.wrong-ans {
+  background: var(--wrong-bg);
+  border-color: var(--wrong);
+  color: var(--wrong);
+}
+
+.opt-btn.wrong-ans .opt-letter {
+  background: var(--wrong);
+  color: white;
+}
+
+.opt-btn.reveal-correct {
+  background: var(--correct-bg);
+  border-color: var(--correct);
+  color: var(--correct);
+  opacity: 0.7;
+}
+
+.opt-btn.reveal-correct .opt-letter {
+  background: var(--correct);
+  color: white;
+}
+
+/* EXPLANATION */
+.explanation {
+  margin: 0 1.5rem 1.25rem;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  display: none;
+}
+
+.explanation.show { display: block; }
+.explanation.correct { background: var(--correct-bg); color: #0f5a34; border-left: 3px solid var(--correct); }
+.explanation.wrong { background: var(--wrong-bg); color: #8a1010; border-left: 3px solid var(--wrong); }
+
+.explanation strong { font-weight: 700; }
+
+code {
+  font-family: 'IBM Plex Mono', monospace;
+  background: rgba(0,0,0,0.08);
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  font-size: 0.85em;
+}
+
+/* SECTION DIVIDER */
+.section-div {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 2rem 0 1rem;
+}
+
+.section-div-line { flex: 1; height: 1px; background: var(--border); }
+
+.section-div-label {
+  font-size: 0.7rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  padding: 0.3rem 0.9rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.section-div-label.p1 { background: #fde8e3; color: var(--p1); }
+.section-div-label.p2 { background: #e3eefe; color: var(--p2); }
+.section-div-label.t3 { background: #e0f2f1; color: var(--t3); }
+.section-div-label.t4 { background: #f3e6ff; color: var(--t4); }
+
+/* FINAL RESULT */
+#final-result {
+  display: none;
+  background: var(--ink);
+  color: var(--bg);
+  border-radius: 20px;
+  padding: 2.5rem;
+  text-align: center;
+  margin: 2rem 0;
+}
+
+#final-result h2 { font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; }
+#final-result .grade { font-size: 4rem; font-weight: 800; font-family: 'IBM Plex Mono', monospace; margin: 1rem 0; }
+#final-result p { color: rgba(245,242,235,0.7); font-size: 0.9rem; }
+
+.btn-retry {
+  margin-top: 1.5rem;
+  padding: 0.75rem 2rem;
+  background: var(--bg);
+  color: var(--ink);
+  border: none;
+  border-radius: 10px;
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.btn-retry:hover { opacity: 0.85; }
+
+/* HIDDEN */
+.hidden { display: none !important; }
+
+@media (max-width: 600px) {
+  .q-header { padding: 1rem; }
+  .q-options { padding: 0 1rem 1rem; }
+  .explanation { margin: 0 1rem 1rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🎯 Simulacro de Examen</h1>
+  <p>Sistemas Inteligentes · UCAM · Prácticas 1 y 2</p>
+</div>
+
+<div id="scoreboard">
+  <div class="score-item">
+    <div class="score-num" id="s-total">0</div>
+    <div class="score-label">Respondidas</div>
+  </div>
+  <div class="score-item">
+    <div class="score-num correct" id="s-correct">0</div>
+    <div class="score-label">Correctas</div>
+  </div>
+  <div class="score-item">
+    <div class="score-num wrong" id="s-wrong">0</div>
+    <div class="score-label">Errores</div>
+  </div>
+  <div class="score-item">
+    <div class="score-num pending" id="s-pct">0%</div>
+    <div class="score-label">Acierto</div>
+  </div>
+  <div style="width:100%; max-width:600px;">
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="progress-fill"></div>
+    </div>
+  </div>
+</div>
+
+<div class="filters">
+  <span class="filter-label">Filtrar:</span>
+  <button class="filter-btn active-all" onclick="filterQuestions('all', this)">Todas</button>
+  <button class="filter-btn" onclick="filterQuestions('p1', this)">Práctica 1</button>
+  <button class="filter-btn" onclick="filterQuestions('p2', this)">Práctica 2</button>
+  <button class="filter-btn" onclick="filterQuestions('t3', this)">Tema 3</button>
+  <button class="filter-btn" onclick="filterQuestions('t4', this)">Tema 4</button>
+  <button class="btn-reset" onclick="resetAll()">↺ Reiniciar todo</button>
+</div>
+
+<div class="quiz-container" id="quiz-container">
+  </div>
+
+<script>
+const questions = [
+  // ============ PRÁCTICA 1 ============
+  {
+    tag: 'p1',
+    section: 'Práctica 1 — Machine Learning con Python (sklearn)',
+    text: '¿Qué librería de Python se usa en la Práctica 1 para Machine Learning?',
+    opts: ['TensorFlow', 'scikit-learn', 'PyTorch', 'Keras'],
+    correct: 1,
+    exp: '<strong>scikit-learn (sklearn)</strong> es la librería usada en la Práctica 1. TensorFlow y Keras se usan en la Práctica 2 para Deep Learning.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Cuántas muestras tiene el dataset Iris en total?',
+    opts: ['100', '120', '150', '200'],
+    correct: 2,
+    exp: 'Iris contiene <strong>150 muestras</strong>, distribuidas en 50 muestras por cada una de las 3 clases (Setosa, Versicolor, Virgínica).'
+  },
+  {
+    tag: 'p1',
+    text: '¿Cuántas características de entrada tiene el dataset Iris?',
+    opts: ['2', '3', '4', '5'],
+    correct: 2,
+    exp: 'Iris tiene <strong>4 características</strong>: longitud del sépalo, ancho del sépalo, longitud del pétalo y ancho del pétalo.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Cuántas muestras tiene el dataset Breast Cancer Wisconsin?',
+    opts: ['150', '350', '569', '750'],
+    correct: 2,
+    exp: 'Breast Cancer Wisconsin tiene <strong>569 muestras</strong>: 212 malignas y 357 benignas.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Cuántas características tiene el dataset Breast Cancer Wisconsin?',
+    opts: ['4', '10', '20', '30'],
+    correct: 3,
+    exp: 'Breast Cancer Wisconsin tiene <strong>30 características</strong> de entrada, todas representadas por números reales positivos.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Cuántas muestras malignas tiene el dataset Breast Cancer?',
+    opts: ['100', '212', '357', '450'],
+    correct: 1,
+    exp: 'El dataset tiene <strong>212 muestras malignas</strong> y 357 benignas, sumando 569 en total.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Cómo se carga el dataset Iris desde sklearn?',
+    opts: ['datasets.iris()', 'datasets.load_iris()', 'datasets.get_iris()', 'load_dataset("iris")'],
+    correct: 1,
+    exp: 'La función correcta es <code>datasets.load_iris()</code>. El patrón general en sklearn es <code>datasets.load_NOMBRE()</code>.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Cómo se carga el dataset Breast Cancer desde sklearn?',
+    opts: ['datasets.load_cancer()', 'datasets.breast_cancer()', 'datasets.load_breast_cancer()', 'load_dataset("cancer")'],
+    correct: 2,
+    exp: 'La función correcta es <code>datasets.load_breast_cancer()</code>.'
+  },
+  {
+    tag: 'p1',
+    text: 'Para dividir los datos en entrenamiento y test, ¿qué función se usa?',
+    opts: ['model_selection.split_data()', 'model_selection.train_test_split()', 'preprocessing.split()', 'datasets.divide()'],
+    correct: 1,
+    exp: '<code>model_selection.train_test_split(x, t, test_size=0.30, random_state=7)</code> es la función estándar para dividir datos en sklearn.'
+  },
+  {
+    tag: 'p1',
+    text: 'Con Iris (150 muestras) y test_size=0.30, ¿cuántas muestras van a test?',
+    opts: ['30', '40', '45', '50'],
+    correct: 2,
+    exp: '30% de 150 = <strong>45 muestras</strong> para test. Las 105 restantes van a entrenamiento.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Qué significa la variable "xe" en el split de sklearn?',
+    opts: ['Etiquetas de entrenamiento', 'Muestras de test', 'Muestras de entrenamiento (features)', 'Porcentaje de error'],
+    correct: 2,
+    exp: '<strong>xe</strong> = muestras de entrenamiento (features). <strong>xt</strong> = muestras de test. <strong>te</strong> = etiquetas entrenamiento. <strong>tt</strong> = etiquetas test.'
+  },
+  {
+    tag: 'p1',
+    text: 'Una vez instanciado el clasificador, la función fit(....) se define correctamente como:',
+    opts: ['fit(xe,te)', 'fit(xe)', 'fit(xe, te, xt, tt)', 'fit(te,tt)'],
+    correct: 0,
+    exp: '<code>fit(xe, te)</code>: primero recibe las <strong>muestras de entrenamiento</strong> (xe) y luego sus <strong>etiquetas</strong> (te). Nunca se pasan datos de test.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Con qué datos se llama al método predict() para evaluar el modelo?',
+    opts: ['predict(xe)', 'predict(te)', 'predict(xt)', 'predict(tt)'],
+    correct: 2,
+    exp: '<code>predict(xt)</code>: se predice sobre las <strong>muestras de test</strong> (xt). Los datos de test no deben usarse en el entrenamiento.'
+  },
+  {
+    tag: 'p1',
+    text: 'Para calcular el porcentaje de acierto del clasificador comparando las etiquetas reales del test (tt) con las predicciones (obtenido), la función utilizada es:',
+    opts: ['confusion_matrix(tt, obtenido)', 'score(tt, obtenido)', 'calculate_accuracy(tt, obtenido)', 'accuracy_score(tt, obtenido)'],
+    correct: 3,
+    exp: '<code>accuracy_score(tt, obtenido)</code> de <code>sklearn.metrics</code> es la encargada de calcular ese porcentaje cruzando valores reales y predictivos.'
+  },
+  {
+    tag: 'p1',
+    text: 'Para normalizar los datos de entrada (x) de la base de datos breast_cancer utilizando la librería de preprocesamiento de sklearn, ¿qué instrucción se utiliza?',
+    opts: ['x_norm = preprocessing.normalize(x)', 'x_norm = preprocessing.scale(x)', 'x_norm = preprocessing.standardize(x)', 'x_norm = preprocessing.minmax_scale(x)'],
+    correct: 1,
+    exp: '<code>preprocessing.scale(x)</code> es la función requerida en la práctica para estandarizar los datos (media 0, desviación 1).'
+  },
+  {
+    tag: 'p1',
+    text: '¿Cuál es el valor por defecto del parámetro k en KNeighborsClassifier?',
+    opts: ['3', '5', '7', '10'],
+    correct: 1,
+    exp: 'KNeighborsClassifier usa <strong>k=5</strong> por defecto. Se puede modificar: <code>KNeighborsClassifier(3)</code> usa k=3.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Cómo se importa el clasificador KNN en sklearn?',
+    opts: ['from sklearn.knn import KNeighborsClassifier', 'from sklearn.neighbors import KNeighborsClassifier', 'from sklearn.classifiers import KNN', 'from sklearn.ml import KNeighborsClassifier'],
+    correct: 1,
+    exp: '<code>from sklearn.neighbors import KNeighborsClassifier</code> es el import correcto.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Cómo se importa el árbol de decisión en sklearn?',
+    opts: ['from sklearn.decision import DecisionTree', 'from sklearn.trees import TreeClassifier', 'from sklearn.tree import DecisionTreeClassifier', 'from sklearn.classifiers import DecisionTreeClassifier'],
+    correct: 2,
+    exp: '<code>from sklearn.tree import DecisionTreeClassifier</code> es el import correcto.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Cómo se importa la SVM en sklearn?',
+    opts: ['from sklearn.svm import SVC', 'from sklearn.support import SVM', 'from sklearn.vector import SVMClassifier', 'from sklearn.svm import SVMClassifier'],
+    correct: 0,
+    exp: '<code>from sklearn.svm import SVC</code> (Support Vector Classifier) es el import correcto.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Cómo se importa la red neuronal MLP en sklearn?',
+    opts: ['from sklearn.deep import MLPClassifier', 'from sklearn.nn import NeuralNetwork', 'from sklearn.neural_network import MLPClassifier', 'from sklearn.network import MLPClassifier'],
+    correct: 2,
+    exp: '<code>from sklearn.neural_network import MLPClassifier</code> es el import correcto.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Cómo se importa el clasificador Bayesiano en sklearn?',
+    opts: ['from sklearn.bayes import GaussianClassifier', 'from sklearn.gaussian_process import GaussianProcessClassifier', 'from sklearn.naive_bayes import GaussianProcessClassifier', 'from sklearn.probabilistic import BayesClassifier'],
+    correct: 1,
+    exp: '<code>from sklearn.gaussian_process import GaussianProcessClassifier</code> es el import correcto.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Qué clasificadores producen resultados diferentes en cada ejecución por tener inicialización aleatoria?',
+    opts: ['KNN y árbol de decisión', 'SVM y KNN', 'MLPClassifier y GaussianProcessClassifier', 'Árbol de decisión y SVM'],
+    correct: 2,
+    exp: '<strong>MLPClassifier y GaussianProcessClassifier</strong> tienen inicialización aleatoria de pesos, por lo que sus resultados varían. Para ellos hay que hacer 10 simulaciones y calcular media y desviación típica.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Cuántas simulaciones hay que hacer para los clasificadores con inicialización aleatoria?',
+    opts: ['3', '5', '10', '20'],
+    correct: 2,
+    exp: 'La práctica indica realizar <strong>10 simulaciones</strong> y dar los resultados como media y desviación típica. Las simulaciones que no convergen (ej: 30% clasificación) deben descartarse.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Qué información muestra la diagonal de la matriz de confusión?',
+    opts: ['Los errores del clasificador', 'Las muestras mal clasificadas', 'Las clasificaciones correctas', 'Las clases del dataset'],
+    correct: 2,
+    exp: 'La <strong>diagonal principal</strong> de la matriz de confusión muestra las muestras clasificadas <strong>correctamente</strong>. Los valores fuera de la diagonal son errores.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Qué función de sklearn calcula la matriz de confusión?',
+    opts: ['confusion_matrix(tt, obtenido)', 'get_confusion_matrix(obtenido, tt)', 'matrix_confusion(tt, obtenido)', 'show_errors(tt, obtenido)'],
+    correct: 0,
+    exp: '<code>confusion_matrix(tt, obtenido)</code> de <code>sklearn.metrics</code>. El primer parámetro son los valores reales (tt) y el segundo las predicciones (obtenido).'
+  },
+  {
+    tag: 'p1',
+    text: '¿Cómo se visualiza el árbol de decisión en sklearn?',
+    opts: ['tree.plot(clasificador)', 'graphviz.Source(export_graphviz(clasificador, ...))', 'DecisionTreeClassifier.draw()', 'sklearn.plot_tree(clasificador)'],
+    correct: 1,
+    exp: '<code>graphviz.Source(export_graphviz(clasificador, feature_names=iris.feature_names))</code> es la forma correcta. Necesita importar <code>export_graphviz</code> y <code>graphviz</code>.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Qué atributo del árbol de decisión indica la importancia de cada variable?',
+    opts: ['clasificador.feature_importance', 'clasificador.feature_importances_', 'clasificador.variable_weights', 'clasificador.importance_scores'],
+    correct: 1,
+    exp: '<code>clasificador.feature_importances_</code> (con guion bajo al final) devuelve un array con la importancia de cada variable en el árbol de decisión.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Cómo se muestra la curva de aprendizaje del MLPClassifier?',
+    opts: ['clasificador.plot_learning()', 'pd.DataFrame(clasificador.loss_curve_).plot()', 'plt.plot(clasificador.learning_history)', 'sklearn.show_curve(clasificador)'],
+    correct: 1,
+    exp: '<code>pd.DataFrame(clasificador.loss_curve_).plot()</code> muestra cómo ha ido disminuyendo el error a través de las épocas de entrenamiento.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Cuál es el valor por defecto del parámetro max_iter en MLPClassifier?',
+    opts: ['100', '150', '200', '500'],
+    correct: 2,
+    exp: 'El valor por defecto de <code>max_iter</code> en MLPClassifier es <strong>200</strong> iteraciones (épocas).'
+  },
+  {
+    tag: 'p1',
+    text: '¿Cuál es la función de activación por defecto en MLPClassifier?',
+    opts: ['sigmoid', 'tanh', 'logistic', 'relu'],
+    correct: 3,
+    exp: 'MLPClassifier usa <strong>relu</strong> como función de activación por defecto. Las opciones son: identity, logistic, tanh, relu.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Cuál es el optimizador (solver) por defecto en MLPClassifier?',
+    opts: ['sgd', 'lbfgs', 'adam', 'gradient'],
+    correct: 2,
+    exp: 'El solver por defecto es <strong>adam</strong>. Las opciones son: lbfgs (quasi-Newton), sgd (descenso del gradiente) y adam.'
+  },
+  {
+    tag: 'p1',
+    text: 'En MLPClassifier, ¿qué significa hidden_layer_sizes=(100,)?',
+    opts: ['100 capas ocultas con 1 neurona cada una', '1 capa oculta con 100 neuronas', '100 capas totales', '100 neuronas en la capa de salida'],
+    correct: 1,
+    exp: '<code>(100,)</code> significa <strong>1 capa oculta con 100 neuronas</strong>. La longitud de la tupla indica el número de capas. (100, 50) sería 2 capas ocultas.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Cuál es el valor por defecto de learning_rate_init en MLPClassifier?',
+    opts: ['0.1', '0.01', '0.001', '0.0001'],
+    correct: 2,
+    exp: 'El valor por defecto de <code>learning_rate_init</code> es <strong>0.001</strong>.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Cuál es la precisión de referencia que ofrece la literatura para Breast Cancer?',
+    opts: ['~90%', '~95%', '~97.5%', '~99%'],
+    correct: 2,
+    exp: 'La literatura ofrece una clasificación en torno al <strong>97.5%</strong> para Breast Cancer Wisconsin. La práctica considera aceptable a partir del 95%.'
+  },
+  {
+    tag: 'p1',
+    text: '¿En qué consiste el sistema de ensamblado (Ejercicio 8 Práctica 1)?',
+    opts: ['Usar solo el mejor clasificador', 'Combinar los 3 mejores clasificadores por mayoría de votos', 'Promediar las predicciones de todos los clasificadores', 'Usar el clasificador con mayor accuracy'],
+    correct: 1,
+    exp: 'El sistema de ensamblado combina los <strong>3 mejores clasificadores tomando la decisión por mayoría de votos</strong>. El objetivo es superar el rendimiento individual.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Por qué es importante la matriz de confusión en Breast Cancer más allá del % de acierto?',
+    opts: ['Porque muestra el tiempo de entrenamiento', 'Porque no es lo mismo clasificar a alguien enfermo como sano que al revés', 'Porque siempre es más precisa que accuracy_score', 'Porque es más fácil de calcular'],
+    correct: 1,
+    exp: 'En diagnóstico médico, <strong>no es lo mismo un falso negativo (enfermo clasificado como sano) que un falso positivo</strong>. El coste de los errores no es simétrico.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Para qué sirve el parámetro random_state en train_test_split?',
+    opts: ['Para activar la aleatoriedad total', 'Para fijar una semilla y obtener resultados reproducibles', 'Para definir el % de test', 'Para barajar el dataset'],
+    correct: 1,
+    exp: '<code>random_state</code> es la <strong>semilla de aleatoriedad</strong>. Fijando el mismo valor siempre se obtiene la misma división, haciendo los resultados reproducibles.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Qué tipo de dataset es Iris según su descripción?',
+    opts: ['Es un dataset de series temporales con datos dependientes del tiempo', 'Es un dataset binario con 2 clases y 4 características categóricas', 'Es un dataset multiclase con 3 clases y 4 características numéricas', 'Es un dataset de regresión con una única variable objetivo continua'],
+    correct: 2,
+    exp: 'Iris es un dataset de clasificación <strong>multiclase</strong> que cuenta con 3 clases (Setosa, Versicolor, Virginica) y 4 características numéricas.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Cómo se ajustan los pesos con el solver sgd en un MLPClassifier?',
+    opts: ['Se calcula una tasa de aprendizaje individual y adaptativa para cada peso', 'Los pesos se actualizan tras ver cada ejemplo durante el descenso del gradiente', 'Los pesos se mantienen constantes durante todo el entrenamiento para asegurar estabilidad', 'Se usa la curvatura de la función de coste para ajustar los pesos de forma más directa'],
+    correct: 1,
+    exp: 'El solver <strong>sgd</strong> (Stochastic Gradient Descent) actualiza los pesos iterativamente calculando el gradiente de la función de pérdida.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Qué tipo de tasa de aprendizaje mantiene su valor constante hasta que la pérdida no mejora durante dos épocas consecutivas, y luego la reduce a la mitad?',
+    opts: ['adaptive', 'invscaling', 'dynamic', 'constant'],
+    correct: 0,
+    exp: 'En sklearn, la tasa de aprendizaje <strong>adaptive</strong> mantiene el valor constante mientras la pérdida disminuya y lo reduce cuando el entrenamiento se estanca.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Qué caracteriza al clasificador GaussianNB?',
+    opts: ['No es adecuado para datos con alta dimensionalidad por su complejidad', 'Requiere definir un kernel para transformar el espacio de entrada', 'Basa su predicción en los k vecinos más cercanos', 'Es un modelo probabilístico que asume independencia entre las características y que cada una sigue una distribución normal'],
+    correct: 3,
+    exp: '<strong>GaussianNB</strong> (Naive Bayes Gaussiano) asume que las características son independientes entre sí y siguen una distribución normal (gaussiana).'
+  },
+  {
+    tag: 'p1',
+    text: '¿Qué efecto tiene la función de activación identity en una neurona de un MLPClassifier?',
+    opts: ['Convierte el valor de entrada en un número binario', 'No transforma el valor de entrada, lo que desactiva la no linealidad y no permite aprender relaciones no lineales', 'Eleva el valor de entrada al cuadrado para magnificar las diferencias', 'Comprime el valor de entrada en un rango de uno'],
+    correct: 1,
+    exp: 'La función <strong>identity</strong> devuelve f(x) = x, por lo que no introduce no linealidad en la red, actuando en la práctica como un modelo lineal.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Cómo se obtiene el número de muestras en el conjunto de entrenamiento, si xe es la matriz de características?',
+    opts: ['A través de xe.size()', 'Usando xe.shape', 'Con len(xe)', 'Accediendo a xe.samples'],
+    correct: 1,
+    exp: 'El atributo <strong>shape</strong> de un array bidimensional en NumPy devuelve una tupla (n_muestras, n_características). Por tanto, la primera dimensión da el número de muestras.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Qué muestra la curva obtenida con classifier.loss_curve_?',
+    opts: ['La evolución de la función de pérdida durante el entrenamiento', 'La cantidad de errores de clasificación en el conjunto de prueba', 'La precisión del modelo en el conjunto de validación a lo largo de las épocas', 'La distribución de los pesos en la capa de salida'],
+    correct: 0,
+    exp: 'El atributo <strong>loss_curve_</strong> de un MLPClassifier contiene la lista de valores de la función de pérdida calculados iterativamente durante el entrenamiento.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Qué efecto tiene aplicar preprocessing.scale antes de entrenar un clasificador?',
+    opts: ['Mejora el rendimiento de clasificadores sensibles a la escala de los datos', 'Aumenta considerablemente la dimensionalidad del conjunto de datos', 'Solo es aplicable a variables categóricas', 'Reduce directamente el sobreajuste'],
+    correct: 0,
+    exp: 'La estandarización (<strong>preprocessing.scale</strong>) centra los datos en media 0 y varianza 1, lo cual es crucial para modelos basados en distancias (KNN, SVM) o redes neuronales.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Cuál es una característica esencial del GaussianProcessClassifier?',
+    opts: ['Su uso principal se limita a problemas de regresión lineal', 'No proporciona información sobre la incertidumbre de sus predicciones', 'Se caracteriza por su excelente escalabilidad en conjuntos de datos muy grandes', 'Es un clasificador probabilístico que modela la distribución de funciones posibles y proporciona predicciones con incertidumbre'],
+    correct: 3,
+    exp: 'Es un modelo potente que proporciona estimaciones probabilísticas rigurosas (y su <strong>incertidumbre</strong>), aunque escala mal computacionalmente con datasets grandes.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Qué representa el atributo feature_importances_ en un árbol de decisión?',
+    opts: ['La relevancia de cada característica al tomar decisiones de ramificación', 'La cantidad de nodos hoja en el árbol', 'La precisión media del modelo en el conjunto de validación', 'El número de muestras usadas durante el entrenamiento'],
+    correct: 0,
+    exp: 'El atributo <strong>feature_importances_</strong> devuelve un vector que indica qué peso o importancia ha tenido cada variable de entrada para realizar las particiones.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Cómo se define una red neuronal con dos capas ocultas de 5 neuronas cada una usando MLPClassifier?',
+    opts: ['MLPClassifier(hidden_layer_sizes=(5, 5))', 'MLPClassifier(hidden_layers=)', 'MLPClassifier(num_hidden_layers=2, neurons_per_layer=5)', 'MLPClassifier(structure=(5, 5))'],
+    correct: 0,
+    exp: 'El parámetro <strong>hidden_layer_sizes</strong> recibe una tupla donde la longitud es el número de capas ocultas y cada valor es la cantidad de neuronas en esa capa.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Cuál es uno de los propósitos principales de ajustar max_iter=1000 en un MLPClassifier?',
+    opts: ['Aumentar el número de capas ocultas en la red neuronal para capturar más complejidad', 'Evitar warnings por falta de convergencia y permitir al modelo aprender mejor si no converge con los valores por defecto', 'Reducir la dimensionalidad de los datos de entrada automáticamente', 'Solo es relevante para la visualización de la curva de pérdida al final del entrenamiento'],
+    correct: 1,
+    exp: 'Aumentar <strong>max_iter</strong> (por defecto 200) da más tiempo al algoritmo de optimización para que la red alcance la convergencia.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Qué solver en MLPClassifier se basa en descenso de gradiente con momentos adaptativos, ajustando dinámicamente la tasa de aprendizaje de cada peso?',
+    opts: ['lbfgs', 'sgd', 'adam', 'backpropagation'],
+    correct: 2,
+    exp: '<strong>Adam</strong> (Adaptive Moment Estimation) es un algoritmo de optimización avanzado y es el solver utilizado por defecto en MLPClassifier por su buena eficiencia.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Qué caracteriza a la función de activación ReLU en MLPClassifier?',
+    opts: ['Se usa principalmente en tareas de regresión lineal', 'Comprime la entrada a un rango fijo, siendo ideal para clasificación binaria', 'Anula los valores negativos, es estándar en redes profundas por su eficiencia y porque evita saturación', 'No modifica la entrada, eliminando la no linealidad'],
+    correct: 2,
+    exp: '<strong>ReLU</strong> (Rectified Linear Unit) devuelve max(0, x). Es extremadamente eficiente computacionalmente y ayuda a mitigar el desvanecimiento del gradiente.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Qué mide el criterio entropy en un árbol de decisión?',
+    opts: ['La impureza de los nodos hoja', 'El número mínimo de muestras requerido para dividir un nodo', 'La ganancia de información', 'La profundidad máxima permitida para el árbol'],
+    correct: 2,
+    exp: 'La entropía se utiliza en los árboles de decisión para calcular la <strong>ganancia de información</strong> y maximizar la reducción de impureza tras una división.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Qué efecto tiene un valor de gamma alto en un clasificador SVC con kernel RBF?',
+    opts: ['Suaviza el modelo, haciéndolo menos propenso al sobreajuste', 'Reduce la penalización por errores de clasificación en el entrenamiento', 'Genera modelos más complejos con fronteras de decisión más ajustadas, ya que aumenta la influencia de cada muestra en el kernel', 'Aumenta la velocidad de entrenamiento del modelo al reducir la complejidad'],
+    correct: 2,
+    exp: 'Un <strong>gamma alto</strong> acorta el radio de influencia de los vectores de soporte, provocando fronteras de decisión muy irregulares que pueden ajustarse demasiado a los datos (sobreajuste).'
+  },
+  {
+    tag: 'p1',
+    text: '¿Qué mide el criterio gini en un DecisionTreeClassifier?',
+    opts: ['La distancia euclidiana entre las muestras para determinar similitud', 'La ganancia de información entre nodos, que es el objetivo de la entropía', 'La impureza de los nodos, siendo una alternativa más rápida a la entropía', 'El número de ramificaciones posibles en un nodo'],
+    correct: 2,
+    exp: 'La <strong>impureza de Gini</strong> evalúa con qué probabilidad se clasificaría incorrectamente un elemento elegido al azar, siendo más eficiente de calcular que la entropía.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Qué significa un falso positivo en una matriz de confusión?',
+    opts: ['El modelo predijo que la muestra es negativa pero en realidad es positiva', 'El modelo predijo que la muestra es positiva y en realidad es positiva', 'El modelo predijo que la muestra pertenece a la clase positiva pero en realidad es negativa', 'El modelo predijo que la muestra es negativa y en realidad es negativa'],
+    correct: 2,
+    exp: 'Un <strong>falso positivo</strong> (Error tipo I) es cuando el modelo afirma incorrectamente la presencia de la condición (predice positivo, pero la realidad era negativa).'
+  },
+  {
+    tag: 'p1',
+    text: '¿Qué realiza la función fit en el entrenamiento de modelos de machine learning?',
+    opts: ['Mide la proporción de predicciones correctas del modelo', 'Entrena el modelo utilizando los datos de entrenamiento proporcionados', 'Divide el conjunto de datos en conjuntos de entrenamiento y prueba', 'Hace predicciones sobre nuevos datos de entrada después de que el modelo ha sido entrenado'],
+    correct: 1,
+    exp: 'La función <strong>fit(X, y)</strong> entrena o ajusta el algoritmo a los datos para construir el modelo de predicción.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Qué efecto tiene aumentar el parámetro C en un clasificador SVM?',
+    opts: ['Suaviza la frontera de decisión, disminuyendo el sobreajuste', 'Ajusta la influencia de cada muestra sobre el kernel RBF', 'Amplía el margen entre clases, permitiendo más errores', 'Penaliza más los errores, reduciendo el margen y aumentando el riesgo de sobreajuste'],
+    correct: 3,
+    exp: 'El hiperparámetro <strong>C</strong> controla el intercambio entre un margen suave y la correcta clasificación de los ejemplos. Un C alto prioriza no cometer errores en entrenamiento, arriesgando sobreajuste.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Qué indica la diagonal de una matriz de confusión?',
+    opts: ['La proporción de datos mal clasificados', 'Las predicciones correctas', 'Los falsos positivos y falsos negativos', 'La importancia relativa de cada característica del modelo'],
+    correct: 1,
+    exp: 'Los elementos ubicados en la <strong>diagonal principal</strong> corresponden a las muestras que el modelo clasificó <strong>correctamente</strong>.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Qué efecto tiene aumentar el valor del parámetro k en un clasificador KNN?',
+    opts: ['Vuelve al modelo más sensible al ruido, incrementando el sobreajuste', 'Suaviza la frontera de decisión, lo que puede reducir el sobreajuste pero aumentar el subajuste', 'Disminuye el número de vecinos considerados en la predicción', 'Solo influye en la evaluación del modelo, no en su entrenamiento'],
+    correct: 1,
+    exp: 'Un <strong>valor k más alto</strong> hace que las decisiones se basen en una votación más amplia, suavizando los límites de clase y reduciendo el sobreajuste, aunque si es extremo causará subajuste.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Qué parámetro controla el número máximo de iteraciones en MLPClassifier?',
+    opts: ['num_iterations', 'n_epochs', 'convergence_limit', 'max_iter'],
+    correct: 3,
+    exp: 'El parámetro <strong>max_iter</strong> define el límite estricto de iteraciones (épocas) que realizará el solver durante el entrenamiento.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Cuál es una desventaja importante del GaussianProcessClassifier?',
+    opts: ['No puede manejar problemas de clasificación multiclase', 'Requiere una normalización de datos muy específica antes de su uso', 'Escala mal con datasets grandes', 'No proporciona ninguna información sobre la incertidumbre de sus predicciones'],
+    correct: 2,
+    exp: 'Su principal problema es que el coste temporal crece rápidamente con el tamaño del conjunto de entrenamiento O(n³), por lo que <strong>escala muy mal para datasets grandes</strong>.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Para qué sirve el parámetro random_state en la función train_test_split?',
+    opts: ['Garantiza que la división de los datos sea la misma en cada ejecución del código', 'Normaliza los datos antes de dividirlos en entrenamiento y prueba', 'Establece el número de clases presentes en el conjunto de datos', 'Define el porcentaje de datos utilizados para el conjunto de prueba'],
+    correct: 0,
+    exp: 'Establecer <strong>random_state</strong> fija una semilla para la aleatoriedad, garantizando la reproducibilidad exacta de los resultados cada vez que se ejecute el código.'
+  },
+  {
+    tag: 'p1',
+    text: 'En un clasificador SVC, ¿qué efecto tiene aumentar el valor del parámetro C?',
+    opts: ['Suaviza la frontera de decisión, resultando en un modelo menos complejo', 'Penaliza más los errores en el conjunto de entrenamiento y reduce el margen de separación, lo que aumenta el riesgo de sobreajuste', 'Disminuye la influencia de cada muestra en el kernel', 'Permite un margen de separación más amplio y tolera más errores en el entrenamiento'],
+    correct: 1,
+    exp: 'Aumentar el parámetro <strong>C</strong> en SVM hace que el modelo tolere menos los errores de entrenamiento, estrechando el margen y aumentando el riesgo de sobreajuste.'
+  },
+  {
+    tag: 'p1',
+    text: 'Al configurar un DecisionTreeClassifier, si se establece el parámetro criterion=\'entropy\', ¿qué métrica se utiliza para decidir las divisiones en los nodos?',
+    opts: ['La ganancia de información', 'La impureza Gini', 'La varianza de las características', 'La probabilidad de las clases en el nodo'],
+    correct: 0,
+    exp: 'Con <code>criterion=\'entropy\'</code>, el árbol calcula la entropía de los nodos para maximizar la <strong>ganancia de información</strong> tras cada división.'
+  },
+  {
+    tag: 'p1',
+    text: 'En un DecisionTreeClassifier, ¿qué controla el parámetro min_samples_leaf?',
+    opts: ['El número de características que se consideran al tomar la decisión en cada división', 'El número mínimo de muestras que debe tener un nodo para poder dividirse', 'La profundidad máxima que puede alcanzar el árbol', 'El número mínimo de muestras que se requieren para que un nodo sea considerado una hoja'],
+    correct: 3,
+    exp: '<code>min_samples_leaf</code> determina el <strong>número mínimo de muestras necesarias para conformar un nodo hoja</strong>, lo que previene crear ramas demasiado específicas (sobreajuste).'
+  },
+  {
+    tag: 'p1',
+    text: 'Cuando se utiliza un MLPClassifier, ¿qué parámetro se ajusta para controlar el número máximo de iteraciones que el modelo realizará durante el entrenamiento?',
+    opts: ['max_iter', 'n_estimators', 'hidden_layer_sizes', 'learning_rate_init'],
+    correct: 0,
+    exp: 'El parámetro <code>max_iter</code> define el <strong>límite máximo de iteraciones</strong> o épocas permitidas para el optimizador.'
+  },
+  {
+    tag: 'p1',
+    text: 'Al usar un SVC con el kernel rbf, ¿cómo influye el parámetro gamma en el modelo?',
+    opts: ['Define el radio de influencia de las muestras de entrenamiento; valores bajos resultan en fronteras de decisión más suaves y valores altos en fronteras más complejas y con más riesgo de sobreajuste', 'Es el término de regularización que penaliza los errores en el conjunto de entrenamiento', 'Establece el grado del polinomio en el kernel', 'Habilita la posibilidad de obtener probabilidades de clasificación'],
+    correct: 0,
+    exp: '<code>gamma</code> controla qué tan lejos llega la influencia de un ejemplo. <strong>Valores altos</strong> ajustan de forma muy estricta la frontera a los datos, incrementando el riesgo de sobreajuste.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Qué representa la curva obtenida a partir de clasificador.loss_curve_?',
+    opts: ['La importancia relativa de cada característica en la toma de decisiones del modelo', 'La precisión del modelo en el conjunto de test a lo largo de las épocas', 'La evolución de la función de pérdida del modelo durante el proceso de entrenamiento', 'La probabilidad de pertenencia a cada clase para cada ejemplo'],
+    correct: 2,
+    exp: 'El atributo <code>loss_curve_</code> de un clasificador MLP almacena los valores de la <strong>función de pérdida iteración tras iteración</strong> durante el entrenamiento.'
+  },
+  {
+    tag: 'p1',
+    text: 'Si se establece un valor muy bajo para el parámetro learning_rate_init al usar el optimizador SGD, ¿cuál es el efecto probable en el entrenamiento?',
+    opts: ['El parámetro no tiene un efecto significativo en el aprendizaje del modelo', 'La pérdida puede oscilar o incluso explotar, impidiendo la convergencia', 'El modelo aprende muy lentamente y la curva de pérdida baja poco o nada, pudiendo dar la impresión de que no aprende', 'El modelo converge de forma muy rápida y eficiente'],
+    correct: 2,
+    exp: 'Un <strong>learning rate demasiado bajo</strong> hace que los ajustes de los pesos sean minúsculos, lo que provoca un aprendizaje extremadamente lento o casi nulo.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Qué asume el clasificador GaussianNB sobre los datos de entrada?',
+    opts: ['Asume que las características son independientes entre sí dado la clase, y que cada característica sigue una distribución normal', 'Asume que las características están fuertemente correlacionadas', 'Asume que los datos son linealmente separables en el espacio de características', 'Asume que las características deben ser discretas y no continuas'],
+    correct: 0,
+    exp: 'El modelo <strong>Naive Bayes Gaussiano</strong> hace la suposición "ingenua" de independencia total entre características, y asume que siguen una distribución normal.'
+  },
+  {
+    tag: 'p1',
+    text: 'Después de entrenar un modelo en scikit-learn con el método fit(), ¿para qué se utiliza típicamente el método predict(X)?',
+    opts: ['Para generar predicciones para un nuevo conjunto de datos de entrada X', 'Para continuar entrenando el modelo con datos adicionales X', 'Para visualizar la frontera de decisión del modelo', 'Para obtener la probabilidad de pertenencia a cada clase'],
+    correct: 0,
+    exp: 'El método <code>predict(X)</code> toma datos no vistos y devuelve las <strong>etiquetas o clases predichas</strong> usando los patrones aprendidos durante el entrenamiento.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Qué asegura el parámetro random_state cuando se usa la función train_test_split para dividir un conjunto de datos?',
+    opts: ['Controla el porcentaje de datos que se asigna al conjunto de test', 'Establece la semilla inicial para la optimización del modelo', 'Define el número de características que se usarán para la división', 'Asegura que la división de los datos en entrenamiento y test sea la misma cada vez que se ejecuta el código'],
+    correct: 3,
+    exp: 'Fijando <code>random_state</code> con un número constante, la división aleatoria será siempre idéntica en cada ejecución, <strong>asegurando resultados reproducibles</strong>.'
+  },
+  {
+    tag: 'p1',
+    text: 'En el contexto de la librería scikit-learn, ¿cuál es la función principal del método fit(X, y) en un modelo?',
+    opts: ['Realizar predicciones sobre nuevos datos no vistos', 'Entrenar el modelo ajustando sus parámetros internos a los datos de entrada X y las etiquetas y', 'Evaluar la precisión o el error del modelo en un conjunto de datos', 'Cargar un conjunto de datos predefinido'],
+    correct: 1,
+    exp: '<code>fit(X, y)</code> es el núcleo del entrenamiento: se encarga de que el algoritmo <strong>aprenda de los datos X y las respuestas y</strong>.'
+  },
+  {
+    tag: 'p1',
+    text: 'En el contexto de los optimizadores para redes neuronales, ¿qué algoritmo se basa en el descenso de gradiente con momentos adaptativos y calcula una tasa de aprendizaje individual para cada peso?',
+    opts: ['newton-cg', 'lbfgs', 'sgd', 'adam'],
+    correct: 3,
+    exp: '<strong>Adam</strong> es un optimizador muy avanzado que adapta su tasa de aprendizaje individualmente para cada parámetro.'
+  },
+  {
+    tag: 'p1',
+    text: '¿Cuál es la función principal de preprocessing.scale?',
+    opts: ['Transforma las características categóricas en valores numéricos', 'Aplica una función de activación no lineal a los datos de entrada', 'Reduce la dimensionalidad del conjunto de datos seleccionando las características más importantes', 'Normaliza los datos de entrada para que tengan una media de 0 y una desviación estándar de 1, lo cual es útil para modelos sensibles a la escala como SVM y MLP'],
+    correct: 3,
+    exp: '<code>preprocessing.scale</code> se usa para <strong>estandarizar los datos</strong>, esencial antes de entrenar redes neuronales o SVMs.'
+  },
+  {
+    tag: 'p1',
+    text: 'En una matriz de confusión, ¿qué representa la diagonal principal?',
+    opts: ['Las predicciones correctas realizadas por el modelo', 'Los casos que el modelo predijo como positivos pero que en realidad eran negativos', 'La suma de los verdaderos positivos y los falsos negativos', 'Los casos que el modelo predijo como negativos pero que en realidad eran positivos'],
+    correct: 0,
+    exp: 'La <strong>diagonal principal</strong> alberga los casos donde la clase predicha coincide con la real, indicando las clasificaciones correctas.'
+  },
+  {
+    tag: 'p1',
+    text: 'Si configuras el parámetro learning_rate_init con un valor muy alto al usar el optimizador SGD en MLPClassifier, ¿cuál es el efecto probable en el entrenamiento?',
+    opts: ['El modelo aprenderá de forma muy rápida y eficiente', 'Es probable que el modelo no converja, ya que la función de pérdida podría oscilar mucho o incluso aumentar', 'El proceso de aprendizaje será muy lento pero estable', 'El valor de learning_rate_init no tiene un impacto significativo con el optimizador SGD'],
+    correct: 1,
+    exp: 'Una <strong>tasa de aprendizaje muy alta</strong> hace que los ajustes de pesos sean tan agresivos que el optimizador no encuentre el mínimo de la función de coste y diverja.'
+  },
+  {
+    tag: 'p1',
+    text: 'Si se utiliza el optimizador SGD en un MLPClassifier y se establece el parámetro learning_rate a adaptive, ¿cómo gestiona el modelo la tasa de aprendizaje?',
+    opts: ['Mantiene la tasa de aprendizaje constante inicialmente, pero la reduce a la mitad si la pérdida de validación no mejora durante un número predefinido de épocas consecutivas', 'La tasa de aprendizaje disminuye gradualmente con cada iteración', 'La tasa de aprendizaje es fija y no cambia durante todo el entrenamiento', 'Calcula una tasa de aprendizaje diferente para cada peso de la red de forma dinámica'],
+    correct: 0,
+    exp: 'En sklearn, la política <code>adaptive</code> <strong>reduce progresivamente</strong> (usualmente dividiendo por 5) el learning rate si la función de pérdida se estanca durante dos épocas.'
+  },
+  {
+    tag: 'p1',
+    text: 'Dentro de las funciones de activación para redes neuronales, ¿cuál es una función estándar en redes profundas modernas, eficiente y que evita la saturación al cortar los valores negativos (poniéndolos a 0)?',
+    opts: ['tanh', 'relu', 'identity', 'logistic'],
+    correct: 1,
+    exp: 'La activación <strong>ReLU</strong> asigna 0 a todo valor negativo y no altera los positivos, lo que la hace muy eficiente y evita el desvanecimiento del gradiente.'
+  },
+
+  // ============ PRÁCTICA 2 ============
+  {
+    tag: 'p2',
+    section: 'Práctica 2 — Deep Learning con TensorFlow 2',
+    text: '¿Cuántas imágenes tiene en total el dataset Fashion MNIST?',
+    opts: ['50.000', '60.000', '70.000', '100.000'],
+    correct: 2,
+    exp: 'Fashion MNIST tiene <strong>70.000 imágenes</strong>: 60.000 para entrenamiento y 10.000 para test.'
+  },
+  {
+    tag: 'p2',
+    text: '¿Cuántas imágenes de Fashion MNIST se usan para entrenamiento?',
+    opts: ['50.000', '60.000', '65.000', '70.000'],
+    correct: 1,
+    exp: 'Se usan <strong>60.000 imágenes para entrenamiento</strong> y 10.000 para test en Fashion MNIST.'
+  },
+  {
+    tag: 'p2',
+    text: '¿Cuál es el tamaño de las imágenes de Fashion MNIST?',
+    opts: ['16×16 píxeles', '28×28 píxeles', '32×32 píxeles', '64×64 píxeles'],
+    correct: 1,
+    exp: 'Fashion MNIST tiene imágenes de <strong>28×28 píxeles</strong> en escala de grises. Al aplanarlas: 28×28 = 784 valores.'
+  },
+  {
+    tag: 'p2',
+    text: '¿En qué formato de color están las imágenes de Fashion MNIST?',
+    opts: ['Color RGB', 'Escala de grises', 'CMYK', 'Blanco y negro puro'],
+    correct: 1,
+    exp: 'Fashion MNIST está en <strong>escala de grises</strong>, a diferencia de CIFAR-10 que es en color RGB.'
+  },
+  {
+    tag: 'p2',
+    text: '¿Cuántas categorías tiene Fashion MNIST?',
+    opts: ['5', '8', '10', '20'],
+    correct: 2,
+    exp: 'Fashion MNIST tiene <strong>10 categorías</strong>: camiseta (0), pantalón (1), suéter (2), vestido (3), abrigo (4), sandalia (5), camisa (6), zapatilla (7), bolso (8) y botín (9).'
+  },
+  {
+    tag: 'p2',
+    text: '¿Cuántas imágenes tiene en total CIFAR-10?',
+    opts: ['50.000', '60.000', '70.000', '100.000'],
+    correct: 1,
+    exp: 'CIFAR-10 tiene <strong>60.000 imágenes</strong>: 50.000 para entrenamiento y 10.000 para test, con 6.000 por clase.'
+  },
+  {
+    tag: 'p2',
+    text: '¿Cuál es el tamaño de las imágenes de CIFAR-10?',
+    opts: ['28×28', '32×32', '64×64', '224×224'],
+    correct: 1,
+    exp: 'CIFAR-10 tiene imágenes de <strong>32×32 píxeles</strong> a color (RGB), con 3 canales de color.'
+  },
+  {
+    tag: 'p2',
+    text: '¿Por qué se divide entre 255.0 al normalizar las imágenes?',
+    opts: ['Para ampliar el rango a [0, 255]', 'Para transformar los valores de [0,255] a [0,1]', 'Para convertir a escala de grises', 'Porque es el tamaño de la imagen'],
+    correct: 1,
+    exp: 'Los píxeles tienen valores entre 0 y 255. Al dividir entre 255.0 se <strong>normalizan a valores entre 0 y 1</strong>, lo que mejora el entrenamiento de la red neuronal.'
+  },
+  {
+    tag: 'p2',
+    text: 'Al hacer reshape(-1, 784) para Fashion MNIST, ¿qué significa el -1?',
+    opts: ['Eliminar esa dimensión', 'Que NumPy calcula automáticamente esa dimensión', 'Restar 1 a cada valor', 'Que la dimensión es variable entre -1 y 784'],
+    correct: 1,
+    exp: 'El parámetro <strong>-1 indica que NumPy calcule automáticamente esa dimensión</strong> (el número de muestras). Así no hay que escribir el número exacto de imágenes.'
+  },
+  {
+    tag: 'p2',
+    text: '¿Por qué se redimensiona a 784 en Fashion MNIST?',
+    opts: ['Porque hay 784 clases', 'Porque 28×28 = 784 píxeles aplanados en un vector', 'Porque es el tamaño de lote óptimo', 'Porque TensorFlow lo requiere siempre'],
+    correct: 1,
+    exp: '<strong>28×28 = 784</strong>. La capa Dense necesita un vector 1D, por lo que la imagen 2D se aplana a un vector de 784 valores.'
+  },
+  {
+    tag: 'p2',
+    text: '¿Cuál es la función de la capa Dropout?',
+    opts: ['Acelerar el entrenamiento', 'Aumentar el número de neuronas', 'Evitar el sobreentrenamiento eliminando neuronas aleatoriamente', 'Conectar capas de distinto tamaño'],
+    correct: 2,
+    exp: '<strong>Dropout</strong> elimina aleatoriamente un porcentaje de neuronas y sus conexiones en cada época, forzando a la red a aprender representaciones más robustas y evitando el sobreentrenamiento.'
+  },
+  {
+    tag: 'p2',
+    text: '¿Qué porcentaje de neuronas elimina Dropout(0.2)?',
+    opts: ['2%', '10%', '20%', '80%'],
+    correct: 2,
+    exp: '<code>Dropout(0.2)</code> elimina el <strong>20%</strong> de las neuronas. El parámetro es la fracción de unidades a desactivar (0.2 = 20%).'
+  },
+  {
+    tag: 'p2',
+    text: '¿Qué función de activación se usa en las capas ocultas de la CNN?',
+    opts: ['sigmoid', 'softmax', 'relu', 'tanh'],
+    correct: 2,
+    exp: '<strong>ReLU (Rectified Linear Unit)</strong> = max(0, x) se usa en las capas ocultas. Es la más común por evitar el problema del gradiente evanescente.'
+  },
+  {
+    tag: 'p2',
+    text: '¿Qué función de activación se usa en la capa de salida para clasificación multiclase?',
+    opts: ['relu', 'sigmoid', 'tanh', 'softmax'],
+    correct: 3,
+    exp: '<strong>Softmax</strong> se usa en la capa de salida multiclase. Convierte los valores en probabilidades que suman 1, permitiendo identificar la clase más probable.'
+  },
+  {
+    tag: 'p2',
+    text: '¿Cuántas neuronas tiene la capa de salida para clasificar 10 categorías?',
+    opts: ['1', '5', '10', '100'],
+    correct: 2,
+    exp: 'Se necesita <strong>1 neurona por clase</strong>. Para 10 categorías → <code>Dense(units=10, activation="softmax")</code>.'
+  },
+  {
+    tag: 'p2',
+    text: '¿Qué optimizador se usa al compilar el modelo en ambas prácticas?',
+    opts: ['SGD', 'RMSprop', 'Adam', 'Adagrad'],
+    correct: 2,
+    exp: '<strong>Adam</strong> es el optimizador usado. Es uno de los más populares en Deep Learning por ser eficiente y adaptativo para grandes conjuntos de datos.'
+  },
+  {
+    tag: 'p2',
+    text: '¿Qué función de pérdida (loss) se usa al compilar el modelo?',
+    opts: ['binary_crossentropy', 'mean_squared_error', 'sparse_categorical_crossentropy', 'categorical_crossentropy'],
+    correct: 2,
+    exp: '<strong>sparse_categorical_crossentropy</strong> se usa cuando las etiquetas son enteros (0, 1, 2...). Si fuesen one-hot encoding se usaría categorical_crossentropy.'
+  },
+  {
+    tag: 'p2',
+    text: '¿Qué hace model.summary()?',
+    opts: ['Entrena el modelo', 'Muestra un resumen de la arquitectura del modelo', 'Evalúa el modelo con datos de test', 'Guarda los pesos del modelo'],
+    correct: 1,
+    exp: '<code>model.summary()</code> muestra un <strong>resumen de la arquitectura</strong>: capas, formas de salida de cada capa y número de parámetros entrenables.'
+  },
+  {
+    tag: 'p2',
+    text: '¿Cómo se guardan los pesos de un modelo entrenado?',
+    opts: ['model.export("modelo.h5")', 'model.save_weights("mimodelo.h5")', 'model.save("modelo.pkl")', 'tf.save_model(model)'],
+    correct: 1,
+    exp: '<code>model.save_weights("mimodelo.h5")</code> guarda solo los pesos. También existe <code>model.save()</code> que guarda toda la arquitectura y los pesos.'
+  },
+  {
+    tag: 'p2',
+    text: '¿Por qué CIFAR-10 necesita CNN en lugar de red densa?',
+    opts: ['Porque tiene más clases que Fashion MNIST', 'Porque las imágenes son a color, en diferentes posiciones y contextos', 'Porque tiene más datos de entrenamiento', 'Porque CNN es siempre mejor que red densa'],
+    correct: 1,
+    exp: 'CIFAR-10 es más difícil: imágenes <strong>a color, en diferentes posiciones y contextos</strong>. Las CNN aprenden características espaciales con sus filtros convolucionales, mientras las redes densas no explotan la estructura 2D.'
+  },
+  {
+    tag: 'p2',
+    text: '¿Cuál es la función de la capa Flatten en una CNN?',
+    opts: ['Reducir el número de filtros', 'Aplicar pooling máximo', 'Convertir el mapa 2D de características en un vector 1D', 'Normalizar los valores de activación'],
+    correct: 2,
+    exp: '<strong>Flatten()</strong> convierte el tensor multidimensional de las capas convolucionales en un vector 1D, necesario para conectarlo con capas Dense.'
+  },
+  {
+    tag: 'p2',
+    text: '¿Qué hace la capa MaxPool2D(pool_size=2, strides=2)?',
+    opts: ['Duplica el tamaño del mapa de características', 'Reduce el mapa de características a la mitad tomando el máximo', 'Aplica 2 filtros convolucionales', 'Añade padding de 2 píxeles'],
+    correct: 1,
+    exp: '<strong>MaxPool2D</strong> reduce el mapa de características tomando el valor máximo de cada región. Con pool_size=2 y strides=2, <strong>divide las dimensiones a la mitad</strong>.'
+  },
+  {
+    tag: 'p2',
+    text: '¿Qué indica input_shape=[32, 32, 3] en la primera capa Conv2D de CIFAR-10?',
+    opts: ['32 filtros, 32 neuronas y 3 capas', 'Imágenes de 32×32 píxeles con 3 canales de color (RGB)', '32 épocas, 32 lotes y 3 clases', 'El tamaño del kernel'],
+    correct: 1,
+    exp: '<strong>[32, 32, 3]</strong>: imágenes de <strong>32×32 píxeles</strong> con <strong>3 canales de color</strong> (R, G, B). Para escala de grises sería [28, 28, 1].'
+  },
+  {
+    tag: 'p2',
+    text: 'Podemos tener la API Secuencial y la API Funcional para construir modelos en Keras. ¿Cuál es una ventaja clave de la API Funcional (en las prácticas Forma 2)?',
+    opts: ['Es más fácil de usar para modelos con una única entrada y salida.', 'Permite crear arquitecturas de red más complejas con flujos de datos no secuenciales.', 'Entrena el modelo más rápidamente que la API Secuencial.', 'No requiere especificar la forma de entrada (input_shape).'],
+    correct: 1,
+    exp: 'La <strong>API Funcional</strong> permite arquitecturas más complejas (múltiples entradas, salidas, ramas no secuenciales) y acceder a capas por nombre (muy útil para técnicas como Grad-CAM).'
+  },
+  {
+    tag: 'p2',
+    text: 'Al entrenar un modelo con model.fit, ¿qué argumento se puede utilizar para reservar automáticamente un porcentaje de los datos de entrenamiento para usarlo como conjunto de validación?',
+    opts: ['validation_data', 'test_split', 'validation_split', 'validation_set'],
+    correct: 2,
+    exp: '<code>validation_split</code> reserva un porcentaje (ej. 0.1 para un 10%) de los datos de entrenamiento para la validación automática.'
+  },
+  {
+    tag: 'p2',
+    text: '¿Qué hace EarlyStopping(patience=5)?',
+    opts: ['Entrena exactamente 5 épocas', 'Para el entrenamiento tras 5 épocas sin mejora en la métrica monitorizada', 'Espera 5 segundos entre épocas', 'Guarda el modelo cada 5 épocas'],
+    correct: 1,
+    exp: '<strong>patience=5</strong> significa que el entrenamiento se detendrá si la métrica monitorizada no mejora durante <strong>5 épocas consecutivas</strong>. Evita entrenar de más.'
+  },
+  {
+    tag: 'p2',
+    text: '¿Para qué sirve ModelCheckpoint?',
+    opts: ['Para pausar el entrenamiento', 'Para guardar automáticamente el modelo cuando mejora', 'Para mostrar la curva de aprendizaje', 'Para reducir la tasa de aprendizaje'],
+    correct: 1,
+    exp: '<strong>ModelCheckpoint</strong> guarda automáticamente el modelo cuando alcanza su mejor rendimiento. Con <code>save_best_only=True</code> solo guarda cuando la métrica mejora.'
+  },
+  {
+    tag: 'p2',
+    text: '¿Por qué hay que guardar la salida de model.fit() en la variable "history"?',
+    opts: ['Para liberar memoria de la GPU', 'Para acceder al historial de métricas y graficar la curva de aprendizaje', 'Es obligatorio en TensorFlow 2', 'Para poder evaluar el modelo después'],
+    correct: 1,
+    exp: 'Guardando en <code>history = model.fit(...)</code>, se puede acceder a <code>history.history["sparse_categorical_accuracy"]</code> y <code>history.history["val_sparse_categorical_accuracy"]</code> para graficar las curvas.'
+  },
+  {
+    tag: 'p2',
+    text: '¿Por qué se usa np.argmax() al calcular la matriz de confusión de la CNN?',
+    opts: ['Para normalizar las predicciones', 'Porque model.predict() devuelve probabilidades y argmax obtiene la clase con mayor probabilidad', 'Para convertir las etiquetas a one-hot', 'Para calcular el error cuadrático medio'],
+    correct: 1,
+    exp: '<code>model.predict()</code> devuelve un array de probabilidades para cada clase. <code>np.argmax(..., axis=1)</code> obtiene el <strong>índice de la probabilidad más alta</strong>, es decir, la clase predicha.'
+  },
+  {
+    tag: 'p2',
+    text: '¿Qué es Grad-CAM?',
+    opts: ['Un optimizador para CNNs', 'Una técnica de regularización como Dropout', 'Una técnica que genera mapas de calor para visualizar dónde se fija la red neuronal', 'Un tipo de capa convolucional'],
+    correct: 2,
+    exp: '<strong>Grad-CAM (Gradient-weighted Class Activation Mapping)</strong> genera un mapa de calor sobre la imagen que muestra qué regiones son más importantes para la decisión de clasificación de la red neuronal.'
+  },
+  {
+    tag: 'p2',
+    text: '¿Sobre qué parte de la CNN se aplica Grad-CAM?',
+    opts: ['La capa de entrada', 'La capa Flatten', 'La última capa convolucional', 'La capa Dense de salida'],
+    correct: 2,
+    exp: 'Grad-CAM se aplica sobre la <strong>última capa convolucional</strong>. Por eso en la práctica se nombra con <code>name="last_conv"</code> para poder acceder a ella desde la API Funcional.'
+  },
+  {
+    tag: 'p2',
+    text: '¿Cuántas muestras de entrenamiento se usan inicialmente en CIFAR-10 para probar el modelo?',
+    opts: ['1.000', '3.000', '10.000', '50.000'],
+    correct: 1,
+    exp: 'La práctica recomienda empezar con solo <strong>3.000 muestras</strong> para comprobar que el modelo funciona, y luego ampliar al total de 50.000 para el entrenamiento completo.'
+  },
+  {
+    tag: 'p2',
+    text: '¿Cómo se carga el dataset CIFAR-10 en TensorFlow?',
+    opts: ['tf.datasets.load("cifar10")', 'from tensorflow.keras.datasets import cifar10', 'import cifar10', 'keras.load_data("cifar10")'],
+    correct: 1,
+    exp: '<code>from tensorflow.keras.datasets import cifar10</code> y luego <code>(x_train, y_train), (x_test, y_test) = cifar10.load_data()</code>.'
+  },
+  {
+    tag: 'p2',
+    text: '¿Qué hace padding="same" en la capa Conv2D?',
+    opts: ['Usa el mismo número de filtros en todas las capas', 'Conserva el tamaño espacial de entrada añadiendo ceros en los bordes', 'Comparte pesos entre capas', 'Aplica el mismo kernel a todos los canales'],
+    correct: 1,
+    exp: '<code>padding="same"</code> añade ceros en los bordes de la imagen para que la salida tenga <strong>el mismo tamaño espacial que la entrada</strong>. Con padding="valid" la salida es más pequeña.'
+  },
+  {
+    tag: 'p2',
+    text: '¿Qué representa el parámetro "filters=32" en Conv2D?',
+    opts: ['El tamaño del kernel', 'El número de mapas de características que aprende la capa', 'El número de píxeles de padding', 'El stride de la convolución'],
+    correct: 1,
+    exp: '<strong>filters=32</strong> indica que la capa aprende <strong>32 filtros diferentes</strong>, generando 32 mapas de características. Cada filtro detecta un patrón distinto.'
+  },
+  {
+    tag: 'p2',
+    text: '¿Cómo se llama al método que muestra los resultados del entrenamiento época a época?',
+    opts: ['model.summary()', 'model.evaluate()', 'model.fit() — muestra los logs automáticamente', 'model.history()'],
+    correct: 2,
+    exp: '<strong>model.fit()</strong> muestra automáticamente los logs de entrenamiento (loss y accuracy) en cada época. El objeto devuelto permite acceder al historial completo.'
+  },
+  {
+    tag: 'p2',
+    text: 'Al entrenar con validation_split=0.1, ¿de dónde se toman los datos de validación?',
+    opts: ['Del conjunto de test', 'De los últimos datos del conjunto de entrenamiento', 'Se descargan automáticamente de internet', 'Se generan sintéticamente'],
+    correct: 1,
+    exp: '<code>validation_split</code> toma el porcentaje especificado de los <strong>últimos datos del conjunto de entrenamiento</strong> (no del test). No barajea antes de dividir.'
+  },
+  {
+    tag: 'p2',
+    text: 'En la gráfica de aprendizaje, ¿qué indica que la curva de validación suba mientras la de entrenamiento baja?',
+    opts: ['El modelo está aprendiendo correctamente', 'Underfitting: el modelo no aprende suficiente', 'Overfitting: el modelo está sobreentrenando', 'El learning rate es demasiado bajo'],
+    correct: 2,
+    exp: 'Cuando la precisión de entrenamiento sube pero la de validación baja (o se estanca), hay <strong>overfitting (sobreentrenamiento)</strong>: el modelo memoriza los datos de entrenamiento pero no generaliza.'
+  },
+  {
+    tag: 'p2',
+    text: '¿Cuál es el orden correcto de las capas en una CNN típica?',
+    opts: ['Flatten → Conv2D → MaxPool2D → Dense', 'Dense → Conv2D → Flatten → MaxPool2D', 'Conv2D → MaxPool2D → Flatten → Dense', 'MaxPool2D → Conv2D → Dense → Flatten'],
+    correct: 2,
+    exp: 'El orden correcto es: <strong>Conv2D → MaxPool2D → (repetir) → Flatten → Dense → Dense(softmax)</strong>. Las capas convolucionales extraen características, Flatten aplana, y Dense clasifica.'
+  },
+  {
+    tag: 'p2',
+    text: '¿Qué ventaja tiene EarlyStopping combinado con ModelCheckpoint?',
+    opts: ['Acelera el entrenamiento', 'Para cuando no mejora y recupera los pesos del mejor momento del entrenamiento', 'Reduce el uso de memoria', 'Permite usar más capas'],
+    correct: 1,
+    exp: 'La combinación es poderosa: <strong>EarlyStopping para el entrenamiento cuando no mejora</strong>, y <strong>ModelCheckpoint guarda el mejor modelo</strong>, permitiendo recuperarlo al final aunque el entrenamiento continue deteriorándose.'
+  },
+  {
+    tag: 'p2',
+    text: '¿Para qué se utiliza GradientTape en redes neuronales?',
+    opts: ['Registra las operaciones para calcular derivadas, permitiendo obtener el gradiente de la salida del modelo respecto a la última capa convolucional', 'Crea una capa completamente conectada con una función de activación', 'Define las dimensiones de la capa de entrada', 'Reduce la cantidad de parámetros aplicando un filtro de pooling'],
+    correct: 0,
+    exp: '<strong>GradientTape</strong> es una API de TensorFlow que permite la diferenciación automática, registrando las operaciones para luego calcular gradientes (muy útil en Grad-CAM).'
+  },
+  {
+    tag: 'p2',
+    text: '¿Cuál es el propósito principal de la función EarlyStopping durante el entrenamiento de redes neuronales?',
+    opts: ['Detener el entrenamiento automáticamente si la métrica de validación deja de mejorar, previniendo el sobreentrenamiento', 'Guardar los pesos del modelo en puntos clave del entrenamiento', 'Visualizar la evolución de la precisión durante el entrenamiento', 'Normalizar los datos de entrada antes de su procesamiento'],
+    correct: 0,
+    exp: '<strong>EarlyStopping</strong> monitoriza una métrica y detiene la ejecución prematuramente si esta deja de mejorar, evitando así que la red memorice el set de entrenamiento.'
+  },
+  {
+    tag: 'p2',
+    text: '¿Cuál es la función principal de la callback ModelCheckpoint?',
+    opts: ['Añadir una constante pequeña a la varianza para evitar problemas numéricos', 'Guardar automáticamente el modelo o sus pesos durante el entrenamiento, en función de una métrica de validación', 'Ajustar dinámicamente la tasa de aprendizaje del optimizador', 'Interrumpir el entrenamiento si no se observa mejora'],
+    correct: 1,
+    exp: '<strong>ModelCheckpoint</strong> permite ir guardando periódicamente (o solo el mejor) estado del modelo, asegurando que no se pierdan los pesos óptimos conseguidos.'
+  },
+  {
+    tag: 'p2',
+    text: '¿Qué hace la capa Flatten en una arquitectura de red neuronal convolucional?',
+    opts: ['Convierte la salida 3D de las capas convolucionales en un vector 1D para conectarlo con capas densas', 'Reduce el número de canales de color de la imagen de entrada', 'Calcula los gradientes para la retropropagación', 'Aplica una operación de pooling para reducir la dimensión espacial'],
+    correct: 0,
+    exp: 'Las capas fully-connected (Dense) solo aceptan entradas de 1 dimensión, por lo que <strong>Flatten</strong> debe transformar la matriz multidimensional previa en un solo vector.'
+  },
+  {
+    tag: 'p2',
+    text: '¿Qué parámetro en la callback EarlyStopping determina cuántas épocas esperar sin mejora antes de detener el entrenamiento?',
+    opts: ['min_delta', 'restore_best_weights', 'monitor', 'patience'],
+    correct: 3,
+    exp: 'El parámetro <strong>patience</strong> define la tolerancia (en cantidad de épocas) que se permite sin mejoras de la métrica monitorizada.'
+  },
+  {
+    tag: 'p2',
+    text: '¿Cuál es el propósito principal de las capas Conv2D en una red neuronal convolucional?',
+    opts: ['Transformar la salida 3D de las capas anteriores en un vector 1D para capas densas', 'Clasificar las características extraídas en las clases finales del problema', 'Reducir la dimensionalidad espacial de las características extraídas', 'Detectar patrones locales en la imagen de entrada, como bordes o texturas'],
+    correct: 3,
+    exp: 'A través de los filtros, las capas <strong>Conv2D</strong> son responsables de extraer y aprender patrones jerárquicos espaciales, como bordes, texturas o formas complejas.'
+  },
+  {
+    tag: 'p2',
+    text: '¿Cuál es el rol principal de las capas MaxPool2D en una CNN?',
+    opts: ['Aplanar características tridimensionales para conectarlas con capas densas', 'Ajustar los pesos de la red para minimizar la función de pérdida', 'Extraer características espaciales básicas como bordes y texturas', 'Reducir el tamaño espacial de la imagen, ayudando a evitar el sobreajuste y reduciendo el coste computacional'],
+    correct: 3,
+    exp: '<strong>MaxPool2D</strong> actúa como un submuestreo espacial, reteniendo solo las características más destacadas de cada región y reduciendo exponencialmente el número de parámetros.'
+  },
+  {
+    tag: 'p2',
+    text: '¿Qué hace la capa de salida Dense con activación softmax en una red para clasificación de imágenes?',
+    opts: ['Selecciona los 10 patrones más relevantes de las capas anteriores para una salida binaria', 'Devuelve la probabilidad de pertenecer a cada una de las 10 clases, siendo adecuada para problemas de clasificación multiclase', 'Aplica una transformación lineal a la entrada y genera 10 características sin una interpretación probabilística', 'Calcula la función de pérdida del modelo durante el entrenamiento'],
+    correct: 1,
+    exp: 'La activación <strong>softmax</strong> en la última capa transforma las puntuaciones netas en una distribución de probabilidades acotada entre 0 y 1, que en conjunto suma 100%.'
+  },
+  {
+    tag: 'p2',
+    text: 'En una Red Neuronal Convolucional, ¿cuál es la función principal de las capas MaxPool2D?',
+    opts: ['Calcular la probabilidad final de que una imagen pertenezca a cada clase', 'Transformar la salida multidimensional de las capas convolucionales en un vector plano', 'Reducir el tamaño espacial de las características extraídas, lo que ayuda a disminuir el número de parámetros, reducir el cómputo y evitar el sobreajuste', 'Detectar patrones locales y características espaciales en la imagen de entrada'],
+    correct: 2,
+    exp: '<strong>MaxPool2D</strong> actúa de embudo: disminuye progresivamente el tamaño de los mapas de características, ahorrando recursos computacionales e impidiendo el sobreajuste.'
+  },
+  {
+    tag: 'p2',
+    text: '¿Para qué se utiliza comúnmente el callback ModelCheckpoint durante el entrenamiento?',
+    opts: ['Para definir el número de épocas que durará el entrenamiento', 'Para visualizar la evolución de la precisión del modelo en el conjunto de entrenamiento', 'Para guardar el modelo completo o solo sus pesos automáticamente a lo largo del entrenamiento, basándose en el valor de una métrica monitorizada', 'Para restaurar los mejores pesos del modelo después de que el entrenamiento se detenga'],
+    correct: 2,
+    exp: '<strong>ModelCheckpoint</strong> es ideal para asegurar nuestro progreso, pues va <strong>guardando el modelo o sus pesos</strong>, normalmente quedándose solo con el que obtiene la mejor métrica.'
+  },
+  {
+    tag: 'p2',
+    text: 'En una Red Neuronal Convolucional, ¿cuál es la función principal de la capa Flatten()?',
+    opts: ['Calcular la probabilidad final de pertenencia a cada clase', 'Extraer patrones locales y características espaciales de la imagen', 'Reducir el tamaño espacial de las características extraídas', 'Transformar la salida multidimensional de las capas convolucionales y de pooling en un vector plano 1D para poder conectarla con capas densas'],
+    correct: 3,
+    exp: 'Las redes densas clásicas (Dense) requieren datos unidimensionales de entrada. La capa <strong>Flatten</strong> toma la salida 2D o 3D de las convoluciones y las <strong>aplana en un solo vector</strong>.'
+  },
+  {
+    tag: 'p2',
+    text: 'Al usar el callback EarlyStopping durante el entrenamiento de una red neuronal, ¿qué controla el parámetro patience?',
+    opts: ['El porcentaje del conjunto de entrenamiento que se reserva para validación', 'El número de épocas consecutivas que se esperará a que la métrica monitorizada no mejore antes de detener el entrenamiento', 'La métrica específica que se va a monitorizar', 'El número máximo total de épocas que se ejecutará el entrenamiento'],
+    correct: 1,
+    exp: 'El parámetro <code>patience</code> define <strong>el nivel de tolerancia</strong>. Indica la cantidad de épocas sin ninguna mejora de la métrica objetivo permitidas antes de finalizar prematuramente.'
+  },
+  {
+    tag: 'p2',
+    text: '¿Cuál es la función principal de las capas Conv2D en una Red Neuronal Convolucional?',
+    opts: ['Aplanar los datos multidimensionales en un vector unidimensional', 'Reducir el número de parámetros y el cómputo al reducir las dimensiones espaciales', 'Realizar la clasificación final calculando las probabilidades de clase', 'Extraer características espaciales y detectar patrones locales en la imagen de entrada, utilizando filtros que se aplican mediante la operación de convolución'],
+    correct: 3,
+    exp: 'Las <strong>Conv2D</strong> son las "gafas" de la red; desplazan pequeños filtros de convolución a lo largo de toda la imagen para extraer <strong>patrones espaciales y características locales</strong>.'
+  },
+  {
+    tag: 'p2',
+    text: '¿Cuál es el objetivo principal de utilizar el callback EarlyStopping durante el entrenamiento de una red neuronal?',
+    opts: ['Asegurar que el modelo entrena exactamente durante un número fijo de épocas', 'Visualizar gráficamente la evolución de la función de pérdida', 'Guardar los pesos del modelo en cada época', 'Detener el entrenamiento automáticamente si el rendimiento del modelo en el conjunto de validación deja de mejorar, ayudando a prevenir el sobreajuste'],
+    correct: 3,
+    exp: '<strong>EarlyStopping</strong> actúa como mecanismo protector. Al detener el entrenamiento a tiempo se garantiza que el modelo <strong>no memorice excesivamente el conjunto de entrenamiento (sobreajuste)</strong>.'
+  },
+  {
+    tag: 'p2',
+    text: 'En un problema de clasificación multiclase utilizando redes neuronales, si la capa de salida es una capa Dense con activación softmax, ¿qué representa su salida?',
+    opts: ['Devuelve un vector de probabilidades, donde cada elemento indica la probabilidad de que la entrada pertenezca a una clase específica, sumando todas las probabilidades 1', 'Indica si la entrada pertenece a la clase positiva o negativa en un problema binario', 'Proporciona una representación lineal de las características extraídas por las capas anteriores', 'Reduce la dimensionalidad de los datos a un único valor para cada entrada'],
+    correct: 0,
+    exp: 'La función <strong>softmax</strong> transforma todas las salidas obtenidas por la capa final en un conjunto de porcentajes que representan <strong>la probabilidad total normalizada</strong> de pertenecer a una clase.'
+  },
+
+  // ============ TEMA 3 ============
+  {
+    tag: 't3',
+    section: 'Tema 3 — Machine Learning (Teoría)',
+    text: '¿En qué década surgió el campo de la Inteligencia Artificial?',
+    opts: ['1940s', '1950s', '1960s', '1970s'],
+    correct: 1,
+    exp: 'El campo de la Inteligencia Artificial surgió formalmente en los <strong>1950s</strong>, marcando su inicio histórico en la Conferencia de Dartmouth en 1956.'
+  },
+  {
+    tag: 't3',
+    text: '¿Cuál es la relación correcta entre IA, Machine Learning y Deep Learning?',
+    opts: ['Son tres campos completamente independientes', 'El Deep Learning contiene al ML, que a su vez contiene a la IA', 'La IA contiene al ML, que a su vez contiene al Deep Learning', 'El ML contiene a la IA y al Deep Learning por igual'],
+    correct: 2,
+    exp: 'El campo de la <strong>IA</strong> es el más amplio; dentro de él se encuentra el <strong>Machine Learning</strong>, y a su vez el <strong>Deep Learning</strong> es un subcampo del ML.'
+  },
+  {
+    tag: 't3',
+    text: '¿Cuál es la pregunta fundamental que diferencia un sistema clásico de uno basado en Machine Learning?',
+    opts: ['¿Usa una CPU o una GPU?', '¿Sigue un flujo programado o aprende por sí solo con la experiencia?', '¿Está escrito en Python o en Java?', '¿Usa datos estructurados o no estructurados?'],
+    correct: 1,
+    exp: 'Los sistemas clásicos ejecutan reglas rígidamente programadas por un humano. El Machine Learning <strong>aprende por sí solo mediante algoritmos basados en datos</strong>.'
+  },
+  {
+    tag: 't3',
+    text: 'Según los datos del tema, ¿qué porcentaje de su tiempo dedica un científico de datos al preprocesamiento de datos?',
+    opts: ['19%', '9%', '60%', '3%'],
+    correct: 2,
+    exp: 'Se estima que un científico de datos dedica alrededor del <strong>60%</strong> de su tiempo únicamente a la limpieza, normalización y preparación de datos antes del entrenamiento.'
+  },
+  {
+    tag: 't3',
+    text: '¿Cuál de las siguientes NO es un problema típico de los datos en Machine Learning?',
+    opts: ['Ausencia de valores', 'Inconsistencia de datos', 'Exceso de registros únicos', 'Outliers'],
+    correct: 2,
+    exp: 'El <strong>exceso de registros únicos</strong> (como el DNI o ID) no es un "problema de corrupción de datos" intrínseco, a diferencia de los valores nulos, inconsistentes o atípicos.'
+  },
+  {
+    tag: 't3',
+    text: '¿Cuál de estas NO es una solución válida para tratar la ausencia de valores?',
+    opts: ['Interpolación', 'Eliminar el registro completo', 'Duplicar el registro anterior', 'Considerar vacío como una categoría'],
+    correct: 2,
+    exp: '<strong>Duplicar el registro anterior</strong> de manera ciega no es una técnica válida ya que sesga los datos; lo correcto es borrarlo, considerar su ausencia una etiqueta en sí misma o imputarlo matemáticamente (media, interpolación, knn).'
+  },
+  {
+    tag: 't3',
+    text: '¿Qué son los outliers?',
+    opts: ['Datos anómalos que pueden ocurrir por errores de almacenamiento, medición o inserción', 'Datos que se repiten exactamente en el dataset', 'Columnas sin información relevante para el modelo', 'Datos con formato incorrecto en la columna'],
+    correct: 0,
+    exp: 'Los <strong>outliers</strong> son valores atípicos, que se alejan de forma significativa y anormal de la distribución natural del resto de los datos.'
+  },
+  {
+    tag: 't3',
+    text: '¿Qué efecto tienen los valores duplicados en el entrenamiento de un algoritmo?',
+    opts: ['Mejoran la generalización del modelo', 'Aceleran el proceso de entrenamiento', 'Hacen que el algoritmo dé más importancia a esos valores duplicados', 'No tienen ningún efecto relevante'],
+    correct: 2,
+    exp: 'Un registro repetido múltiples veces engaña al algoritmo, haciendo que este <strong>dé excesivo peso/relevancia a ese patrón concreto</strong>.'
+  },
+  {
+    tag: 't3',
+    text: '¿Cuál es la solución recomendada para tratar la inconsistencia de datos?',
+    opts: ['Eliminar todos los registros con inconsistencias', 'Sustituirlos por la media de la columna', 'Aplicar validaciones para que los datos sean coherentes', 'Convertirlos a valores numéricos'],
+    correct: 2,
+    exp: 'Las incoherencias (ej. fechas de nacimiento en el futuro) deben tratarse aplicando <strong>validaciones y lógica de negocio</strong> para depurarlas.'
+  },
+  {
+    tag: 't3',
+    text: '¿Qué técnica es la más popular para la transformación (reducción) de dimensionalidad?',
+    opts: ['K-means', 'ID3', 'PCA (Análisis de Componentes Principales)', 'Back-propagation'],
+    correct: 2,
+    exp: 'El algoritmo <strong>PCA (Principal Component Analysis)</strong> comprime variables fuertemente correlacionadas y proyecta el conjunto de datos reduciendo sus dimensiones perdiendo la mínima información posible.'
+  },
+  {
+    tag: 't3',
+    text: '¿Cuándo NO es necesaria la normalización de datos?',
+    opts: ['Cuando se usan redes neuronales', 'Cuando se usan máquinas de vectores soporte', 'Cuando se usan árboles de decisión', 'Cuando se usan algoritmos K-NN'],
+    correct: 2,
+    exp: 'Los <strong>árboles de decisión</strong> y algoritmos basados en ellos (Random Forest) aplican particiones (if-else) directas sobre los valores puros, por lo que no son sensibles a la escala y no requieren normalización.'
+  },
+  {
+    tag: 't3',
+    text: '¿Qué resultado produce la normalización (tipificación) de variables?',
+    opts: ['Valores entre 0 y 1', 'Media 0 y varianza 1', 'Media 1 y desviación típica 0', 'Todos los valores se convierten en enteros'],
+    correct: 1,
+    exp: 'La estandarización o tipificación rescala una variable para que su distribución estadística obtenga una <strong>media de 0 y una varianza (o desviación típica) de 1</strong>.'
+  },
+  {
+    tag: 't3',
+    text: '¿Cuál es la fórmula de normalización (tipificación) de una variable?',
+    opts: ['zi = xi + X̄ / σ', 'zi = (xi − X̄) / σ', 'zi = xi × σ − X̄', 'zi = (xi × X̄) / σ'],
+    correct: 1,
+    exp: 'Para estandarizar un valor (xi) se debe <strong>restar la media (X̄) y dividir todo por la desviación típica (σ)</strong>.'
+  },
+  {
+    tag: 't3',
+    text: '¿En cuántos subconjuntos se divide el conjunto de datos antes de entrenar un modelo?',
+    opts: ['2: entrenamiento y test', '3: entrenamiento, validación y test', '4: entrenamiento, desarrollo, validación y test', 'Solo 1, el de entrenamiento'],
+    correct: 1,
+    exp: 'Se acostumbra a hacer 3 divisiones (splits) bien definidas: <strong>Entrenamiento (train), Validación y Test</strong>.'
+  },
+  {
+    tag: 't3',
+    text: '¿Para qué sirve el conjunto de TEST?',
+    opts: ['Para ajustar los hiperparámetros del modelo', 'Para calcular la probabilidad de éxito del algoritmo al finalizar el entrenamiento', 'Para evitar el sobre-entrenamiento durante el proceso', 'Para seleccionar las variables más relevantes'],
+    correct: 1,
+    exp: 'El conjunto de Test no interviene en ningún momento del entrenamiento y solo se usa para aportar una medida final objetiva de <strong>generalización (probabilidad de éxito)</strong>.'
+  },
+  {
+    tag: 't3',
+    text: '¿Para qué sirve el conjunto de VALIDACIÓN?',
+    opts: ['Para medir la precisión final del modelo en producción', 'Para encontrar una solución general al problema, evitando el sobre-entrenamiento', 'Para seleccionar las variables de entrada del modelo', 'Para hacer la normalización de los datos'],
+    correct: 1,
+    exp: 'La Validación ocurre iterativamente "en caliente" durante el aprendizaje. Monitorizar sus métricas permite a los algoritmos (como el Early Stopping) <strong>cortar y evitar el sobre-entrenamiento</strong>.'
+  },
+  {
+    tag: 't3',
+    text: '¿Qué fenómeno ocurre cuando el modelo aprende demasiado bien los datos de entrenamiento pero falla en datos nuevos?',
+    opts: ['Generalización', 'Normalización', 'Sobre-entrenamiento (overfitting)', 'Discretización'],
+    correct: 2,
+    exp: 'El <strong>sobreajuste u overfitting</strong> sucede cuando el modelo no ha "aprendido" la tendencia real subyacente, sino que se ha "memorizado" de forma rígiida cada detalle de los datos de entrenamiento.'
+  },
+  {
+    tag: 't3',
+    text: 'En la validación cruzada K-fold, ¿cómo se divide el conjunto de datos?',
+    opts: ['En K partes, usando todas para entrenar simultáneamente', 'En K partes, dejando una para validar y el resto para entrenar', 'En dos mitades iguales alternadas', 'En K partes, usando solo la primera para validar siempre'],
+    correct: 1,
+    exp: 'K-fold Cross-Validation fracciona todo el dataset en <strong>K bloques</strong> idénticos; ejecuta el modelo K veces, aislando secuencialmente uno de los bloques como Test y juntando el resto para Entrenamiento.'
+  },
+  {
+    tag: 't3',
+    text: 'En el método "Leave One Out", ¿cuántas muestras se usan para validar en cada iteración?',
+    opts: ['K muestras aleatorias', 'La mitad del conjunto', 'Una única muestra', 'El 20% del conjunto'],
+    correct: 2,
+    exp: '<strong>Leave-One-Out (LOO)</strong> es un K-Fold extremo donde la "K" equivale al tamaño del dataset. Por lo que en cada pasada aparta <strong>una única muestra aislada para validar</strong> y usa todo el resto para entrenar.'
+  },
+  {
+    tag: 't3',
+    text: '¿Cuál es el inconveniente principal del método "Leave One Out"?',
+    opts: ['Baja precisión en los resultados', 'Alto coste computacional', 'No funciona con pocos datos', 'Requiere normalizar los datos'],
+    correct: 1,
+    exp: 'Si tienes un dataset de 5.000 ejemplos, LOO requiere entrenar desde cero la friolera de 5.000 redes neuronales o algoritmos, provocando un <strong>alto coste de procesamiento/computacional</strong>.'
+  },
+  {
+    tag: 't3',
+    text: 'Para algoritmos con inicializaciones aleatorias como redes neuronales, ¿cómo se ejecuta el 10-fold?',
+    opts: ['Se ejecuta una sola vez', 'Se ejecuta 10 veces, una por fold', 'Se ejecuta 30 veces por fold, dando lugar a 30×10-fold', 'Se ejecuta solo con el primer fold'],
+    correct: 2,
+    exp: 'Para garantizar la significancia y evitar suerte estadística en la iniciación de pesos, se suele ejecutar <strong>30 veces el ciclo de 10-Fold</strong> promediando el resultado final.'
+  },
+  {
+    tag: 't3',
+    text: '¿Qué ocurre cuando una variable categórica nominal se transforma a numérica (one-hot encoding)?',
+    opts: ['Se crea una única variable con valores 0, 1, 2, 3…', 'Se crea una variable binaria por cada categoría posible', 'Se elimina la variable original del dataset', 'Se normaliza la variable entre 0 y 1'],
+    correct: 1,
+    exp: 'A través del <strong>One-Hot Encoding</strong>, una variable cualitativa "Color [Rojo, Azul]" se expande a <strong>tantas variables binarias (0/1) exclusivas como categorías tenga</strong>.'
+  },
+  {
+    tag: 't3',
+    text: '¿Qué tipo de aprendizaje usa datos etiquetados?',
+    opts: ['No supervisado', 'Por refuerzo', 'Supervisado', 'Por clustering'],
+    correct: 2,
+    exp: 'El <strong>Aprendizaje Supervisado</strong> entrena analizando entradas con su "etiqueta o respuesta correcta asociada" (por ejemplo, ver fotos sabiendo de antemano si son de perros o gatos).'
+  },
+  {
+    tag: 't3',
+    text: '¿Qué tipo de aprendizaje usa datos NO etiquetados?',
+    opts: ['Supervisado', 'Por refuerzo', 'Profundo', 'No supervisado'],
+    correct: 3,
+    exp: 'El <strong>Aprendizaje No Supervisado</strong> introduce un conjunto de datos a ciegas (sin etiquetas o soluciones) e intenta buscar en ellos afinidades y agrupaciones naturales latentes (Clustering).'
+  },
+  {
+    tag: 't3',
+    text: '¿Cuál es la característica principal del aprendizaje por refuerzo?',
+    opts: ['Usa grandes conjuntos de datos etiquetados', 'El algoritmo aprende a reaccionar en un entorno obteniendo recompensas', 'No requiere ningún dato de entrenamiento', 'Agrupa datos similares en clusters'],
+    correct: 1,
+    exp: 'En el Aprendizaje por Refuerzo, se define un agente y un entorno interactivo; el agente prueba acciones buscando maximizar su <strong>recompensa positiva (o minimizar penalizaciones/castigos)</strong>.'
+  },
+  {
+    tag: 't3',
+    text: 'La detección de tumores clasificando imágenes como malignas o benignas es un ejemplo de:',
+    opts: ['Aprendizaje no supervisado', 'Aprendizaje por refuerzo', 'Aprendizaje supervisado', 'Clustering K-means'],
+    correct: 2,
+    exp: 'Es clasificación pura mediante <strong>Aprendizaje Supervisado</strong>. Los tumores han tenido que ser clasificados a priori por humanos para generar las bases de datos.'
+  },
+  {
+    tag: 't3',
+    text: 'Agrupar vehículos en categorías sin haberlas definido previamente es un ejemplo de:',
+    opts: ['Aprendizaje supervisado', 'Aprendizaje por refuerzo', 'Aprendizaje no supervisado', 'Regresión lineal'],
+    correct: 2,
+    exp: 'Toda tarea de agrupamiento o segmentación sin etiquetas de referencia y que busca relaciones ocultas es <strong>Aprendizaje No Supervisado</strong> (Clustering).'
+  },
+  {
+    tag: 't3',
+    text: 'En el aprendizaje supervisado, ¿qué ocurre cuando la clasificación es incorrecta?',
+    opts: ['Se elimina el dato del entrenamiento', 'Se corrige el error y se reajusta el modelo', 'Se reinicia el entrenamiento desde cero', 'Se ignora el error si es menor al 5%'],
+    correct: 1,
+    exp: 'El error obtenido entre lo que el modelo ha dicho y lo que debería haber dicho (etiqueta real), se mide por una función de pérdida, la cual retropropaga la diferencia y <strong>reajusta internamente los pesos matemáticos</strong>.'
+  },
+  {
+    tag: 't3',
+    text: '¿En qué se basa la clasificación por vecindad?',
+    opts: ['En la media de todas las variables del conjunto de entrenamiento', 'En las muestras más próximas al nuevo dato, de las que se conoce su clase', 'En la distribución estadística de los datos', 'En la entropía de la variable objetivo'],
+    correct: 1,
+    exp: 'Los algoritmos de Vecindad (como KNN) evalúan el parecido de un nuevo elemento midiendo su distancia geométrica frente a las <strong>muestras más próximas (conocidas y ya categorizadas)</strong>.'
+  },
+  {
+    tag: 't3',
+    text: '¿Qué hace el algoritmo Nearest Neighbour (NN)?',
+    opts: ['Asigna la clase más frecuente de todo el conjunto', 'Promedia los K vecinos más cercanos', 'Asigna la categoría del vecino más cercano', 'Vota entre los K vecinos más próximos'],
+    correct: 2,
+    exp: 'A diferencia de KNN (donde participan varios), en el NN básico (o 1-NN) simplemente <strong>copia o asigna la categoría de su único y más próximo "vecino/elemento" de referencia</strong>.'
+  },
+  {
+    tag: 't3',
+    text: 'En K-NN, ¿cómo se determina la clase del nuevo dato?',
+    opts: ['Por la media aritmética de los valores de los K vecinos', 'Por la clase más votada entre los K vecinos más próximos', 'Por el vecino con mayor valor de la variable objetivo', 'Por el vecino con menor distancia euclídea únicamente'],
+    correct: 1,
+    exp: 'Al seleccionar la "K" (los vecinos elegidos a participar), el modelo escoge la decisión basándose puramente en un sistema de votación y gana <strong>la clase o categoría mayoritaria</strong>.'
+  },
+  {
+    tag: 't3',
+    text: 'En un ejemplo 5-NN donde hay 3 vecinos de la clase A y 2 de la clase B, ¿a qué clase se asigna el nuevo dato?',
+    opts: ['A la clase B, por tener menos votos', 'A la clase A, por tener más votos', 'No se puede determinar con 5 vecinos', 'Se asigna a ambas clases con probabilidad 0.6 y 0.4'],
+    correct: 1,
+    exp: 'Como se rige por elección demócrata sencilla, las mayorías definen la clasificación: 3 vecinos votan por <strong>A</strong> frente a 2 de B. Se asignará a la <strong>Clase A</strong>.'
+  },
+  {
+    tag: 't3',
+    text: '¿Qué hace la variante K-NN con rechazo?',
+    opts: ['Rechaza todos los datos atípicos antes de entrenar', 'Solo clasifica si alguna clase supera un número de votos umbral', 'Elimina los vecinos más lejanos automáticamente', 'Clasifica usando solo el vecino más cercano'],
+    correct: 1,
+    exp: 'El KNN con rechazo incorpora una cuota de seguridad. Evita clasificar un dato dudoso (por ejemplo por diferencia muy estrecha) e impone que la decisión debe <strong>superar un determinado porcentaje de los votos (umbral mínimo)</strong>.'
+  },
+  {
+    tag: 't3',
+    text: '¿Cuál es el objetivo del Condensed-NN (Algoritmo de Hart)?',
+    opts: ['Aumentar el número de prototipos en el conjunto de entrenamiento', 'Reducir el conjunto de entrenamiento manteniendo prototipos mal clasificados', 'Normalizar automáticamente las variables de entrada', 'Calcular la distancia óptima entre clusters'],
+    correct: 1,
+    exp: 'Dado que KNN computa sobre toda la base de datos, el Condensed NN (Algoritmo de Hart) filtra la información, quedándose únicamente con los vectores relevantes de las "zonas frontera", permitiendo <strong>reducir drásticamente el conjunto de entrenamiento sin perder precisión</strong>.'
+  },
+  {
+    tag: 't3',
+    text: '¿Cuál es el principal inconveniente de los métodos basados en vecindad?',
+    opts: ['Solo funcionan con variables categóricas', 'Alto coste computacional al analizar todo el conjunto de entrenamiento', 'No permiten normalizar las variables de entrada', 'No pueden manejar más de dos clases'],
+    correct: 1,
+    exp: 'A diferencia de las redes que guardan conocimiento comprimido en sus pesos, los métodos KNN arrastran y evalúan uno a uno TODOS los datos del dataset frente al nuevo elemento para poder calcular métricas espaciales, acarreando un <strong>alto coste computacional</strong>.'
+  },
+  {
+    tag: 't3',
+    text: '¿Qué diferencia al K-NN por distancia media del K-NN estándar?',
+    opts: ['Usa menos vecinos para la clasificación', 'Da más relevancia a la distancia de los K vecinos que al voto individual', 'Normaliza las distancias antes de votar', 'Solo funciona con dos clases'],
+    correct: 1,
+    exp: 'El KNN por Distancia invierte o pondera los votos. No vale lo mismo un vecino a medio milímetro que uno al límite; el algoritmo asigna pesos/fuerza a la influencia y <strong>la distancia otorga mayor relevancia que simplemente la cantidad bruta de votos</strong>.'
+  },
+  {
+    tag: 't3',
+    text: '¿Qué tipo de aprendizaje usa el algoritmo K-means?',
+    opts: ['Supervisado', 'Por refuerzo', 'No supervisado', 'Semi-supervisado'],
+    correct: 2,
+    exp: 'K-Means (Medias K) es un claro exponente de <strong>Aprendizaje No Supervisado</strong> y persigue encontrar y crear "K" clusters naturales partiendo de la nada (sin etiquetas o directrices previas).'
+  },
+  {
+    tag: 't3',
+    text: '¿Cuál es el primer paso del algoritmo K-means?',
+    opts: ['Calcular la distancia entre todos los puntos', 'Asignar cada punto a su centroide más cercano', 'Inicializar K centroides en el espacio de datos', 'Normalizar todos los datos de entrada'],
+    correct: 2,
+    exp: 'El algoritmo comienza su ejecución "tirando dados"; debe sembrar/ubicar o seleccionar puntos base (<strong>K Centroides</strong>) de forma pseudo-aleatoria en el espacio N-dimensional.'
+  },
+  {
+    tag: 't3',
+    text: '¿Cuándo se detiene la iteración del algoritmo K-means?',
+    opts: ['Después de exactamente 100 iteraciones', 'Cuando los centroides no se mueven o se mueven por debajo de un umbral', 'Cuando todos los puntos forman un único cluster', 'Cuando el número de clusters supera K'],
+    correct: 1,
+    exp: 'El modelo converge y la iteración cesa exclusivamente cuando los recálculos en las posiciones medias ya no varían <strong>(los centroides se fijan y no se desplazan)</strong>.'
+  },
+  {
+    tag: 't3',
+    text: 'En K-means, ¿cómo se actualiza la posición del centroide?',
+    opts: ['Tomando el punto más alejado del centro', 'Tomando la posición del promedio de los objetos de ese grupo', 'Seleccionando aleatoriamente un nuevo punto del grupo', 'Usando el punto más cercano al centroide anterior'],
+    correct: 1,
+    exp: 'Al término de cada ronda, el algoritmo recalcula todos los ejes, y el nuevo epicentro geométrico (centroide) toma la <strong>posición matemática promedio o media de los puntos afiliados a él</strong>.'
+  },
+  {
+    tag: 't3',
+    text: '¿En qué tipo de métodos se basan las SVM?',
+    opts: ['Métodos basados en árboles', 'Métodos Kernel', 'Métodos de clustering', 'Métodos bayesianos'],
+    correct: 1,
+    exp: 'Las Máquinas de Vectores Soporte o Support Vector Machines (SVM) emplean fuertemente el "truco", es decir, <strong>Métodos Kernel</strong> como el lineal, gaussiano o polinómico para operar con cálculos complejos.'
+  },
+  {
+    tag: 't3',
+    text: '¿Cuál es la idea principal de los métodos Kernel?',
+    opts: ['Eliminar las variables menos relevantes del modelo', 'Transformar los datos para encontrar una solución lineal en el espacio transformado', 'Agrupar los datos en clusters antes de clasificar', 'Reducir el número de neuronas en la capa oculta'],
+    correct: 1,
+    exp: 'Los Kernels proyectan puntos hacia nuevas dimensiones abstractas de manera que, agrupaciones que en un plano en 2D parecían imposibles de separar, en la dimensión proyectada <strong>se puedan "rebanar" o aislar con un hiperplano lineal simple</strong>.'
+  },
+  {
+    tag: 't3',
+    text: '¿Qué es un hiperplano en el contexto de las SVM?',
+    opts: ['Una función de activación no lineal', 'La frontera de decisión lineal que separa las clases en el espacio transformado', 'El conjunto de vectores soporte del modelo', 'Una técnica de reducción de dimensionalidad'],
+    correct: 1,
+    exp: 'En N-dimensiones, el <strong>hiperplano</strong> no es más que la propia superficie divisoria (el muro o frontera lineal) ideada para aislar o segmentar las zonas o clases.'
+  },
+  {
+    tag: 't3',
+    text: '¿Cuál es el criterio para elegir el mejor hiperplano en una SVM?',
+    opts: ['El que pasa por el mayor número de puntos', 'El que minimiza el número de vectores soporte', 'El que está a mayor distancia de ambas clases', 'El que tiene menor pendiente'],
+    correct: 2,
+    exp: 'A este método de "Maximum Margin Classifier" no le sirve la primera barrera que funcione. La SVM busca colocar ese divisor de manera que le quede la <strong>mayor distancia/margen libre de aire por ambos costados (distancia máxima de seguridad)</strong> frente a la muestra extrema de cada clase.'
+  },
+  {
+    tag: 't3',
+    text: '¿Cuál de los siguientes NO es un tipo de Kernel común en SVM?',
+    opts: ['Kernel lineal', 'Kernel polinomial', 'Kernel gaussiano', 'Kernel exponencial cuadrático inverso'],
+    correct: 3,
+    exp: 'Los tres grandes y populares kernels son: lineal, polinómico y Radial Basis Function o RBF (Gaussiano). El supuesto <strong>exponencial cuadrático inverso</strong> es inventado o no estándar para SVM clásico.'
+  },
+  {
+    tag: 't3',
+    text: '¿Qué permite tratar la lógica borrosa (fuzzy logic)?',
+    opts: ['Solo datos numéricos precisos', 'Información imprecisa como "temperatura baja" o "mucha fuerza"', 'Exclusivamente datos categóricos binarios', 'Datos en tiempo real únicamente'],
+    correct: 1,
+    exp: 'Frente a las restricciones rígidas de sí/no o blanco/negro de la lógica Booleana, la Lógica Borrosa fue creada para asimilar <strong>información ambigua, gradual o verbal humana</strong>.'
+  },
+  {
+    tag: 't3',
+    text: 'Una persona de 25 años en lógica clásica se define como adulta o no adulta. En lógica borrosa se diría que pertenece al conjunto "edad adulta" en un:',
+    opts: ['0% (no pertenece)', '100% (pertenece totalmente)', 'Aproximadamente 50%', 'Exactamente 25%'],
+    correct: 2,
+    exp: 'En el enfoque borroso la transición es suave. Al no tener ni 18 (plenamente joven) ni 40 (punto cumbre adulto), se asume una pertenencia compartida en transito con un <strong>grado de pertenencia parcial u aproximado (ej: 50%)</strong>.'
+  },
+  {
+    tag: 't3',
+    text: '¿Qué indica la función de pertenencia μA(t) de un conjunto borroso?',
+    opts: ['La probabilidad de que el valor t pertenezca a A', 'El número de elementos en el conjunto A', 'El grado en que la variable t está incluida en el concepto representado por A', 'La frecuencia con que aparece el valor t en el dataset'],
+    correct: 2,
+    exp: 'La fórmula o función μ (mu) mapea y dictamina el índice en el rango de [0 a 1], representando matemáticamente <strong>en qué grado/fuerza el valor se asimila a su conjunto semántico A</strong>.'
+  },
+  {
+    tag: 't3',
+    text: '¿Cuál es la diferencia entre función de pertenencia y función de densidad de probabilidad?',
+    opts: ['Son lo mismo, solo tienen nombres diferentes', 'La pertenencia indica inclusión en un concepto borroso; la probabilidad indica frecuencia de aparición', 'La probabilidad es subjetiva y la pertenencia es objetiva', 'La pertenencia solo toma valores 0 o 1'],
+    correct: 1,
+    exp: 'Un concepto probabilístico describe un suceso futuro (ej: un 30% de probabilidad de tener lluvia hoy). Un conjunto borroso asume <strong>su inclusión</strong> en el momento presente (ej: hoy caen 20L/m2, es en un 40% un "día lluvioso").'
+  },
+  {
+    tag: 't3',
+    text: '¿Cuántos subconjuntos borrosos se recomiendan para una partición?',
+    opts: ['Número par, normalmente 2 o 4', 'Número impar, normalmente 3 o 7', 'Exactamente 5 siempre', 'Tantos como valores distintos tenga la variable'],
+    correct: 1,
+    exp: 'Metodológicamente, se estructura siempre en base a <strong>subdivisiones o rangos lingüísticos impares (ej: Bajo, Medio, Alto)</strong> para que la estructura garantice poseer un eje o pico "Neutro/Medio".'
+  },
+  {
+    tag: 't3',
+    text: '¿De qué tipo son las reglas en la lógica borrosa?',
+    opts: ['Reglas matemáticas exactas', 'Reglas del tipo If-Then', 'Reglas estadísticas basadas en probabilidades', 'Reglas deterministas sin excepciones'],
+    correct: 1,
+    exp: 'Los subsistemas borrosos (o Fis) derivan la toma de decisión aplicando <strong>estructuras lógicas condicionales Si-Entonces (If-Then) humanas</strong>: "Si la Temperatura es Fría y Humedad Alta, entonces Motor_Aire=Bajo".'
+  },
+  {
+    tag: 't3',
+    text: '¿Qué es una FAM (Fuzzy Associative Memory)?',
+    opts: ['Una función de activación neuronal', 'Una matriz que representa la consecuencia de cada regla para combinaciones de entradas', 'Un método de clustering borroso', 'Un tipo de normalización de datos'],
+    correct: 1,
+    exp: 'Para estructurar de forma limpia un cruce multidimensional de múltiples variables, se emplea una tabla y sistema de cruce de celdas llamado <strong>Fuzzy Associative Memory (Memoria Asociativa Borrosa)</strong>.'
+  },
+  {
+    tag: 't3',
+    text: '¿Qué hace el borrosificador en un sistema de lógica borrosa?',
+    opts: ['Convierte conjuntos borrosos en valores precisos de salida', 'Establece la relación entre puntos de entrada no borrosos y sus conjuntos borrosos', 'Elimina los valores extremos de las variables de entrada', 'Calcula la ganancia de información de cada variable'],
+    correct: 1,
+    exp: 'Para que el sistema de razonamiento comience, el motor Fuzzifier (o borrosificador) tiene el cometido de leer sensores o <strong>valores nítidos de la vida real (ej. 14°C) y traducirlos a grados fraccionados de las etiquetas</strong> (ej. 30% frío y 15% medio).'
+  },
+  {
+    tag: 't3',
+    text: '¿Qué hace el desborrosificador?',
+    opts: ['Convierte variables numéricas en conjuntos borrosos', 'Transforma un conjunto borroso en un valor no borroso (la salida del sistema)', 'Selecciona las reglas más relevantes del sistema', 'Calcula el solapamiento entre particiones'],
+    correct: 1,
+    exp: 'Dado que una válvula robótica no puede "activarse a un estado 30% neutro", la defuzzificación extrae o comprime las conclusiones borrosas y <strong>expulsa un solo y único valor real o eléctrico</strong> listo para interactuar con la realidad (ej: 4 voltios).'
+  },
+  {
+    tag: 't3',
+    text: '¿En qué se inspiran los algoritmos evolutivos?',
+    opts: ['En el funcionamiento de las redes neuronales biológicas', 'En el proceso de evolución y selección natural de las especies', 'En los grafos de flujo de los algoritmos clásicos', 'En los métodos de optimización matemática exacta'],
+    correct: 1,
+    exp: 'Creados sobre paradigmas neo-darwinistas (mutación, adaptación, reproducción), la computación evolutiva extrae sus raíces del <strong>proceso biológico de la evolución y selección natural de genética en las especies</strong>.'
+  },
+  {
+    tag: 't3',
+    text: '¿Cómo se representa una solución en los algoritmos evolutivos con codificación binaria?',
+    opts: ['Como un árbol de decisión', 'Como un vector de números reales', 'Como una cadena de bits (cromosoma)', 'Como una lista de reglas IF-THEN'],
+    correct: 2,
+    exp: 'Cada posible estrategia o candidato/solución en un individuo se encapsula genéticamente a una tira lineal en binario (o flotantes) conformando un <strong>"Cromosoma" artificial</strong> estructurado de "genes".'
+  },
+  {
+    tag: 't3',
+    text: '¿Qué es una mutación en un algoritmo evolutivo?',
+    opts: ['El intercambio de genes entre dos progenitores', 'La evaluación de la aptitud de un individuo', 'El cambio aleatorio de uno o varios genes de un individuo', 'La selección de los mejores individuos para reproducirse'],
+    correct: 2,
+    exp: 'A fin de reavivar y alterar el conformismo en el código genético e inyectar aire fresco y nuevas rutas a la resolución, la <strong>Mutación propicia un cambio o virado aislado y aleatorio de bits/genes de sus secuencias</strong>.'
+  },
+  {
+    tag: 't3',
+    text: '¿Qué es el cruce en un punto en algoritmos evolutivos?',
+    opts: ['Se eligen todos los genes aleatoriamente de un progenitor', 'Se elige un punto al azar y se intercambian las cadenas de genes desde ese punto hasta el final', 'Se eligen n puntos y se intercambia el material genético entre ellos', 'Se promedian los genes de ambos progenitores'],
+    correct: 1,
+    exp: 'El proceso o Single-Point Crossover fragmenta o corta figuradamente con tijeras ambos cromosomas paternos en una "bisagra" predefinida o aleatoria y fusiona o <strong>intercambia sus extensiones finales restantes mutuamente</strong>.'
+  },
+  {
+    tag: 't3',
+    text: '¿Qué es el cruce uniforme?',
+    opts: ['Se elige un punto de cruce uniforme en el centro del cromosoma', 'Cada gen se escoge aleatoriamente de una de las soluciones progenitoras', 'Se intercambia el material genético en intervalos uniformes', 'Se usa siempre que los progenitores tengan fitness idéntico'],
+    correct: 1,
+    exp: 'El Crossover o <strong>Cruce Uniforme evalúa y "lanza una moneda" de forma individualizada (50%)</strong> ante cada gen específico de las cadenas parentales para perfilar al nuevo retoño (hijo).'
+  },
+  {
+    tag: 't3',
+    text: '¿Qué hace la selección proporcional en un algoritmo evolutivo?',
+    opts: ['Selecciona aleatoriamente individuos sin importar su aptitud', 'El número de copias de cada individuo es proporcional a su adecuación (fitness)', 'Selecciona siempre a los N mejores individuos', 'Ordena los individuos y selecciona por posición'],
+    correct: 1,
+    exp: 'Llamada comúnmente ruleta o selección por adecuación: si el padre A es tres veces más apto (con mayor cuota de fitness) que el padre B, este poseerá <strong>el triple de "boletos y copias/oportunidades en sorteo" en la terna reproductiva</strong>.'
+  },
+  {
+    tag: 't3',
+    text: '¿Qué es la selección por torneo?',
+    opts: ['Se selecciona el individuo con menor evaluación', 'Se toman al azar un conjunto de individuos y se selecciona el de mayor adecuación', 'Se comparan todos los individuos entre sí', 'Se selecciona el individuo de la posición media del ranking'],
+    correct: 1,
+    exp: 'Frente a calcular estadísticamente el total general (Ruleta), la táctica de Torneo acorta los procesos al secuestrar y retar a ciegas un grupo K menor de la población total y <strong>declarar vencedor al poseedor de mayor fitness de este subgrupo para aparear</strong>.'
+  },
+  {
+    tag: 't3',
+    text: 'En los algoritmos evolutivos, ¿qué ocurre con los nuevos individuos generados en cada generación?',
+    opts: ['Siempre se añaden a la población existente sin eliminar ninguno', 'Solo se añaden si superan la media de la población', 'Sustituyen a los n individuos con menor evaluación de la generación anterior', 'Se almacenan sin modificar la población actual'],
+    correct: 2,
+    exp: 'El algoritmo necesita limitar su demografía. Siguiendo mecánicas de presión evolutiva por supervivencia, los nuevos retoños o hijos sanos <strong>erradican, expulsan o desplazan de las métricas de la especie a los adultos que arrastran peores desempeños</strong>.'
+  },
+  {
+    tag: 't3',
+    text: '¿Qué representa cada nodo de rama en un árbol de decisión?',
+    opts: ['Una decisión final', 'Una elección entre varias alternativas', 'Una probabilidad de cada clase', 'Un valor promedio de la variable'],
+    correct: 1,
+    exp: 'En el esquema y diseño formal de Árboles, las hojas simbolizan la resolución/clase última, y los "nodos internos" fungen a modo de encrucijada condicional indicando bifurcaciones o <strong>elecciones sobre los atributos</strong> (ej. ¿Cielo: Nublado/Despejado?).'
+  },
+  {
+    tag: 't3',
+    text: '¿Qué algoritmo recursivo usan los árboles de decisión para su construcción?',
+    opts: ['Back-propagation', 'K-means', 'ID3 basado en ganancia de información', 'PCA'],
+    correct: 2,
+    exp: 'Desarrollado y popularizado por Quinlan, la métrica base por entropía/ganancia y motor clásico tras las subdivisiones top-down para configurar arboles de clasificación recae bajo el famoso <strong>Algoritmo Iterativo ID3 (y su derivado superior C4.5)</strong>.'
+  },
+  {
+    tag: 't3',
+    text: '¿Qué mide la entropía en el contexto de los árboles de decisión?',
+    opts: ['El número de nodos del árbol', 'La cantidad de información que proporciona una variable (su importancia)', 'La distancia entre los nodos del árbol', 'La velocidad de convergencia del algoritmo'],
+    correct: 1,
+    exp: 'Inspirada por Claude Shannon en su esquema comunicativo informacional matemático, en el campo de Machine Learning denota caos o incertidumbre; su variante cruzada (Gain o Ganancia) computa cuán puro, relevante o cuánta <strong>cantidad valiosa de información extrae un atributo aislado</strong> para predecir algo.'
+  },
+  {
+    tag: 't3',
+    text: '¿Cuál es una ventaja importante de los árboles de decisión respecto a otros algoritmos?',
+    opts: ['Son los más precisos en todos los casos', 'Una vez creado el árbol, es muy fácil extraer reglas (alta interpretabilidad)', 'No requieren preprocesamiento de datos', 'Funcionan exclusivamente con variables categóricas'],
+    correct: 1,
+    exp: 'A menudo descritos dentro de modelos White Box (cajas blancas transparentes), brindan la mayor y <strong>más excelente interpretabilidad analítica</strong> pudiendo volcar los trayectos internos de red como reglas lógicas gramaticales que la mente y psique humana puede verificar.'
+  },
+  {
+    tag: 't3',
+    text: 'En la fórmula Ganancia(S,A) = Entropía(S) − Σ (|Sv|/|S|) · Entropía(Sv), ¿qué representa Sv?',
+    opts: ['El número total de ejemplos en S', 'El subconjunto de S para el cual el atributo A tiene valor v', 'La entropía original del conjunto S', 'El peso del atributo A en la fórmula'],
+    correct: 1,
+    exp: 'Con el objetivo de ponderar el fraccionamiento de S al particionar con un rasgo A, el vector o bloque matemático <strong>Sv</strong> alude a los retazos específicos del conjunto de muestras agrupadas en que el citado y concreto <strong>Atributo A adquiere una ramificación u opción/valor igual a `v`</strong>.'
+  },
+  {
+    tag: 't3',
+    text: '¿Para qué tipos de problemas y variables son adecuados los árboles de decisión?',
+    opts: ['Solo clasificación con variables categóricas', 'Solo regresión con variables continuas', 'Principalmente clasificación, con variables tanto categóricas como continuas', 'Solo cuando hay menos de 5 variables de entrada'],
+    correct: 2,
+    exp: 'Los modelos y bifurcaciones de los árboles no se limitan a variables nominales; sus nodos dividen espacios de <strong>datos continuos (ej. si Precio > 12)</strong> al unísono de <strong>categóricas (ej. si Pelo=Rizado)</strong> y abarcan clasificaciones (o incluso regresiones con los modelos CART).'
+  },
+  {
+    tag: 't3',
+    text: '¿Qué es un Random Forest?',
+    opts: ['Un único árbol de decisión muy profundo', 'Una combinación de árboles donde cada árbol usa atributos seleccionados aleatoriamente', 'Un algoritmo de clustering basado en distancias', 'Una red neuronal con capas aleatorias'],
+    correct: 1,
+    exp: 'El <strong>Random Forest (Bosque Aleatorio)</strong> es de tipo Ensemble Bagging. Combina las sentencias de multitud de "árboles" individuales débiles, forzados además a diferenciarse seleccionando de forma aleatoria su set o muestra de atributos (features).'
+  },
+  {
+    tag: 't3',
+    text: '¿Cómo se toma la decisión final en un Random Forest para clasificación?',
+    opts: ['Se usa solo el árbol con mayor precisión individual', 'Por votación por mayoría de todos los árboles', 'Por el promedio de las salidas de todos los árboles', 'Por el árbol entrenado con más datos'],
+    correct: 1,
+    exp: 'Aplicando inteligencia colectiva, cada componente o árbol independiente forja y suelta su propia tesis a ciegas. La predicción última y maestra que aporta el Bosque dictamina qué clase obtiene el consenso ganando <strong>por votación simple bajo mayorías o votos directos</strong>.'
+  },
+  {
+    tag: 't3',
+    text: '¿Cuándo se poda un árbol en Random Forest?',
+    opts: ['Cuando su profundidad supera un umbral', 'Cada árbol crece hasta su máxima extensión posible y no hay proceso de poda', 'Cuando el error de validación empieza a subir', 'Cuando tiene más hojas que el promedio del bosque'],
+    correct: 1,
+    exp: 'Es el sello inconfundible de RF; el mecanismo busca a propósito árboles ruidosos, inestables o sobreajustados e inyectar inmensa divergencia permitiendo que <strong>estos broten al máximo profundo y natural sin realizar recortes o "poda (pruning)" de estabilización post-fase</strong>.'
+  },
+  {
+    tag: 't3',
+    text: '¿Para qué problemas puede usarse Random Forest?',
+    opts: ['Solo clasificación', 'Solo regresión', 'Regresión y clasificación', 'Solo con variables categóricas'],
+    correct: 2,
+    exp: 'Random Forest es totalmente elástico para todo ámbito productivo o analítico y se adapta genialmente tanto para etiquetas separadas de <strong>clasificación por suma de votaciones</strong>, así como para medias aritméticas puras continuas de <strong>modelado por regresión</strong>.'
+  },
+  {
+    tag: 't3',
+    text: '¿Cuál de estas afirmaciones sobre Random Forest es FALSA?',
+    opts: ['Puede usarse para reducción de dimensionalidad', 'Los árboles se construyen con muestras tomadas aleatoriamente con reemplazo', 'Cada árbol se construye con exactamente las mismas variables', 'Nuevas instancias se predicen por agregación de predicciones de los árboles'],
+    correct: 2,
+    exp: 'A diferencia del Bagging ordinario, el núcleo maestro o "Random" exige el parámetro max_features. Cada nodo evalúa y separa empleando un set o porción seleccionada a ciegas y <strong>se descarta y prohíbe taxativamente que todos los árboles posean iteraciones con los "mismos rasgos y todas las variables fijas"</strong>.'
+  },
+  {
+    tag: 't3',
+    text: '¿En qué se inspiran las redes neuronales artificiales?',
+    opts: ['En los algoritmos de ordenación de datos', 'En las redes de neuronas que forman el cerebro biológico', 'En los grafos de flujo de control', 'En los métodos de regresión estadística'],
+    correct: 1,
+    exp: 'La estructura y fundamentos iniciales partieron como conjeturas de las matemáticas de modelado a la forma abstracta sobre <strong>cómo las estructuras nerviosas, dendritas y sinapsis procesan cognitivamente los impulsos en el encéfalo humano (Cerebro Biológico)</strong>.'
+  },
+  {
+    tag: 't3',
+    text: 'En el Perceptrón de Rosenblatt, si Sum > 0, ¿cuál es la salida?',
+    opts: ['y = 0', 'y = −1', 'y = Sum', 'y = 1'],
+    correct: 3,
+    exp: 'La abstracción e implementación en función binaria primitiva (Escalón/Step Function) postula que si el sumatorio nítido neto (Sum) se eleva a valor por encima de su cota estricta en 0, <strong>el salto de salida a escupir dispara matemáticamente como estado positivo (1)</strong>.'
+  },
+  {
+    tag: 't3',
+    text: '¿Qué es el bias (sesgo) en una neurona artificial?',
+    opts: ['El error cometido en la clasificación', 'Un peso adicional cuya entrada es siempre 1', 'La tasa de aprendizaje del algoritmo', 'El número de neuronas en la capa oculta'],
+    correct: 1,
+    exp: 'Matemáticamente el <strong>Sesgo o Bias</strong> otorga al nodo capacidad y flexión para deslizar o "trasladar el umbral y plano en su gráfico y ejes"; y algorítmicamente se anexa y computa simplemente insertando y modelando este como un peso conectivo especial <strong>sujeto o alimentado por un valor neutro estático de factor 1</strong>.'
+  },
+  {
+    tag: 't3',
+    text: '¿Qué tipo de problema NO puede resolver una única neurona (perceptrón simple)?',
+    opts: ['La función lógica AND', 'La función lógica OR', 'La función lógica XOR', 'Problemas de clasificación binaria lineal'],
+    correct: 2,
+    exp: 'El paper definitivo en el declive histórico de las redes neuronales a manos de Minksy/Papert expuso cómo las propiedades y carencias matemáticas y dimensionales frustraban o inhabilitaban totalmente que modelos de Perceptrón Simple unificados separaran o clasificaran dominios complejos de <strong>exclusiones O Exclusivas cruzadas (Problema del XOR)</strong>.'
+  },
+  {
+    tag: 't3',
+    text: '¿Cómo aprende el Perceptrón Multicapa (MLP)?',
+    opts: ['Por selección natural de pesos', 'Mediante el algoritmo de back-propagation', 'A través de K-fold cross-validation', 'Usando el algoritmo ID3'],
+    correct: 1,
+    exp: 'Resucitando a mediados/finales de los 80 al dominio tras la travesía o valle temporal sombrío (invierno de la IA), el revulsivo matemático al esquema de capas intermedias del Multi-Layer fue el <strong>Descent Gradient y el cómputo de errores y derivadas encadenadas en forma de retro-propagación (Back-Propagation)</strong>.'
+  },
+  {
+    tag: 't3',
+    text: '¿Qué ocurre si el factor de aprendizaje (η) es demasiado grande?',
+    opts: ['El modelo converge más rápido al óptimo global', 'No se alcanza una solución óptima, saltando sobre el mínimo', 'El modelo queda atrapado en un mínimo local', 'La red no puede aprender ningún patrón'],
+    correct: 1,
+    exp: 'El hiperparámetro Learning Rate estipula la magnitud que abarca y el tamaño de zancada en cada vector correctivo en base a sus derivadas. Si asume cuotas desproporcionadas, al intentar llegar y afianzar la meta/valle en el descenso se <strong>sobrepasa a los extremos (overshooting) errando y rebotando de forma histriónica y caótica, e imposibilitando o saltando así los valles (mínimo global de error)</strong>.'
+  },
+  {
+    tag: 't3',
+    text: '¿Qué es el "Momento" (Inercia) en el entrenamiento de redes neuronales?',
+    opts: ['El número de épocas máximo de entrenamiento', 'Un término que añade una parte de la modificación de peso anterior para acelerar la convergencia', 'La tasa de cambio del factor de aprendizaje', 'El peso inicial de todas las neuronas'],
+    correct: 1,
+    exp: 'Aplicado en SGD y optimizadores varios, el Momentum agrega fricción física "virtual" al algoritmo inyectando al reajuste presente <strong>un factor y suma porcentual de la magnitud en la fase/movimiento del paso evolutivo exacto iterado la vez y turno anterior</strong>, saltando baches y atajando inercias.'
+  },
+  {
+    tag: 't3',
+    text: 'Hacer esto (convertir un rango continuo en intervalos agrupados), se conoce como:',
+    opts: ['Reducir la dimensionalidad', 'Discretizar', 'Hacer un k-means', 'Ninguna es correcta'],
+    correct: 1,
+    exp: '<strong>Discretizar</strong> consiste en transformar una variable continua (infinitos valores) en un conjunto de intervalos o categorías (discretas).'
+  },
+  {
+    tag: 't3',
+    text: 'En lógica borrosa, los valores que puede tomar una variable, se conoce como:',
+    opts: ['Variable lingüística', 'Memoria asociativa borrosa', 'Ninguna es correcta', 'Universo del discurso'],
+    correct: 3,
+    exp: 'El <strong>Universo del discurso</strong> (o dominio) representa el rango total de valores nítidos reales (ej: de 0 a 100 grados) que puede tomar una variable en un sistema borroso.'
+  },
+  {
+    tag: 't3',
+    text: 'Cual de los siguientes métodos usa Kernels:',
+    opts: ['Random Forest', 'Ninguna es correcta', '{K,L}-NN', 'SVM'],
+    correct: 3,
+    exp: 'Las Máquinas de Vectores Soporte (<strong>SVM</strong>) son el algoritmo por excelencia que utiliza el "Truco del Kernel" (lineal, polinómico, gaussiano) para separar clases proyectándolas a dimensiones superiores.'
+  },
+  {
+    tag: 't3',
+    text: 'En el cruce uniforme de los algoritmos genéticos:',
+    opts: ['Los dos cromosomas se cortan por n puntos y el material genético situado entre ellos se intercambia de manera alternada', 'Se elige un punto al azar y se intercambian las cadenas de genes que va desde el punto de cruce hasta el final', 'Cada gen se escoge aleatoriamente de una de las soluciones progenitoras', 'Ninguna es correcta'],
+    correct: 2,
+    exp: 'En el <strong>cruce uniforme</strong>, no hay un punto de corte fijo; se lanza una "moneda" (50% de probabilidad) para <strong>cada gen individualmente</strong>, decidiendo de qué progenitor se hereda.'
+  },
+  {
+    tag: 't3',
+    text: 'El método de selección de los algoritmos genéticos en los que se ordenan los individuos de mayor a menor adecuación y el número de copias que recibe cada uno depende del lugar que ocupa en la lista. Se conoce como:',
+    opts: ['Torneo', 'Ninguna es correcta', 'Métodos basados en rango', 'Selección proporcional'],
+    correct: 2,
+    exp: 'Los <strong>métodos basados en rango (Rank-based selection)</strong> ordenan a la población en una lista según su fitness y asignan la probabilidad de reproducción en función de su posición (ranking), no de su valor absoluto.'
+  },
+  {
+    tag: 't3',
+    text: 'Cuando se tienen muchas variables y pocos registros, se suele hacer:',
+    opts: ['Hacer un k-fold', 'Reducir la dimensionalidad', 'Utilizar métodos de discretización', 'Ninguna es correcta'],
+    correct: 1,
+    exp: 'La "maldición de la dimensionalidad" (demasiadas columnas y pocas filas) provoca que los modelos no aprendan bien y fallen. La solución habitual es <strong>reducir la dimensionalidad</strong> aplicando técnicas como PCA.'
+  },
+  {
+    tag: 't3',
+    text: 'En una gráfica del error para una red neuronal donde una curva baja (aprende) y la otra baja pero luego empieza a subir (?), la curva que empieza a subir representa:',
+    opts: ['El error acumulado por épocas', 'El error que presentan las muestras de test / validación', 'El error que presentan las muestras de entrenamiento', 'Ninguna es correcta'],
+    correct: 1,
+    exp: 'La curva que empieza a aumentar su error mientras el modelo sigue entrenando (la curva de entrenamiento baja) representa el <strong>error en las muestras de test o validación</strong>, un síntoma inequívoco de que la red está sufriendo overfitting (sobreajuste).'
+  },
+  {
+    tag: 't3',
+    text: 'En el algoritmo de backpropagación, indica cual de estas acciones es correcta:',
+    opts: ['El error se propaga hacia atrás, hacia la capa de neuronas anterior, y se usa para ajustar los pesos sinápticos en esta capa. Se continúa propagando el error hacia atrás y ajustando los pesos hasta que se alcance la capa de entrada.', 'Ninguna es correcta', 'Se inicia con unos pesos sinápticos aleatorios, de tal forma que el error se acumula con la diferencia entre el valor deseado y el obtenido, propagándose hacia adelante por cada capa...', 'El error se propaga desde el inicio, desde ahí se van modificando los pesos de cada capa hasta llegar a la última capa de salida...'],
+    correct: 0,
+    exp: 'El algoritmo de <strong>Backpropagation (Retropropagación)</strong> calcula la derivada del error en la salida y la va propagando <strong>hacia atrás</strong> (desde la salida hacia la entrada), reajustando secuencialmente los pesos en cada capa.'
+  },
+
+  // ============ TEMA 4 ============
+  {
+    tag: 't4',
+    section: 'Tema 4 — Deep Learning y Conceptos Avanzados',
+    text: '¿Cuál es la principal diferencia entre Machine Learning y Deep Learning?',
+    opts: ['En ML cada capa aprende una función específica, en DL todas las neuronas aprenden igual', 'En DL cada capa de la red neuronal aprende una función específica, creando capas de abstracción conectadas entre sí', 'Deep Learning no utiliza redes neuronales', 'Machine Learning siempre requiere más datos que Deep Learning'],
+    correct: 1,
+    exp: 'En <strong>Deep Learning</strong>, cada capa extrae características cada vez más complejas, creando una jerarquía de abstracción (desde detectar bordes simples hasta reconocer objetos complejos).'
+  },
+  {
+    tag: 't4',
+    text: '¿Qué modelo utiliza Deep Learning para funcionar?',
+    opts: ['Un modelo basado en tablas de decisiones', 'Un modelo que simula el sistema neuronal biológico usando redes profundas', 'Un modelo basado exclusivamente en estadística bayesiana', 'Un modelo de reglas lógicas programadas manualmente'],
+    correct: 1,
+    exp: 'El Deep Learning se fundamenta en las <strong>Redes Neuronales Artificiales</strong> (ANN) profundas, inspiradas libremente en la estructura e interconexión del cerebro biológico.'
+  },
+  {
+    tag: 't4',
+    text: '¿Cuál es la función de la Convolution Layer en una CNN?',
+    opts: ['Reducir la cantidad de parámetros agrupándolos', 'Conectar todas las neuronas para devolver el resultado final', 'Aplicar un filtro (kernel) a la entrada para extraer características y pasar el resultado a la siguiente capa', 'Clasificar el objeto usando valores probabilísticos entre 0 y 1'],
+    correct: 2,
+    exp: 'Las <strong>capas de convolución</strong> deslizan filtros (kernels) matemáticos a lo largo de la imagen, permitiendo extraer patrones visuales y características espaciales locales.'
+  },
+  {
+    tag: 't4',
+    text: '¿Qué arquitecturas corresponden a redes CNN?',
+    opts: ['LSTM, GRU, Transformer y BERT', 'AlexNet, VGGNet, GoogLeNet y ResNet', 'Hadoop, Spark, CUDA y TensorCore', 'PyTorch, Keras, Caffe y Tensorflow'],
+    correct: 1,
+    exp: '<strong>AlexNet, VGGNet, GoogLeNet y ResNet</strong> son algunas de las arquitecturas históricas más famosas y revolucionarias dentro del campo de la Visión por Computador con CNNs.'
+  },
+  {
+    tag: 't4',
+    text: '¿Qué devuelve la función Softmax en la Fully Connected Layer?',
+    opts: ['La media de todas las clases posibles', 'Un valor entre -1 y 1 para cada clase', 'El valor 1 para la clase con mayor probabilidad y 0 para el resto', 'Un valor binario aleatorio para cada neurona'],
+    correct: 2,
+    exp: 'En términos de decisión final de clasificación (hard-max), la red seleccionará la <strong>clase con máxima probabilidad (1)</strong> y descartará las demás (0), aunque internamente Softmax calcule una distribución de probabilidades.'
+  },
+  {
+    tag: 't4',
+    text: '¿Cómo se puede engañar a una red de aprendizaje profundo?',
+    opts: ['Reduciendo el número de capas ocultas durante el entrenamiento', 'Añadiendo ruido (perturbación) imperceptible a una imagen para que la clasifique incorrectamente', 'Usando un dataset más grande del habitual', 'Cambiando el framework utilizado durante la inferencia'],
+    correct: 1,
+    exp: 'Esto se conoce como un <strong>ataque adversario (Adversarial Attack)</strong>, en el que se inyecta un patrón de ruido calculado matemáticamente que, aunque invisible para nosotros, destroza la predicción del modelo.'
+  },
+  {
+    tag: 't4',
+    text: '¿Qué relación existe entre la Inteligencia Artificial, Machine Learning y Deep Learning?',
+    opts: ['Son tres tecnologías completamente independientes', 'Machine Learning y Deep Learning son sinónimos dentro de la IA', 'La IA engloba al Machine Learning, y este a su vez engloba al Deep Learning como caso particular', 'Deep Learning es más amplio que Machine Learning y que la propia IA'],
+    correct: 2,
+    exp: 'Imagina círculos concéntricos: <strong>IA</strong> es el campo amplio, dentro de la IA está el <strong>Machine Learning</strong> (algoritmos que aprenden de datos), y dentro del ML está el <strong>Deep Learning</strong> (basado en redes neuronales profundas).'
+  },
+  {
+    tag: 't4',
+    text: '¿Cómo se denominan las capas intermedias de una red neuronal profunda?',
+    opts: ['Capas de entrada', 'Capas de salida', 'Capas ocultas', 'Capas de convolución'],
+    correct: 2,
+    exp: 'Las capas que se encuentran entre la capa de entrada (input) y la de salida (output) se denominan coloquialmente <strong>capas ocultas (hidden layers)</strong>.'
+  },
+  {
+    tag: 't4',
+    text: '¿Qué tipo de red neuronal aplica el mismo conjunto de pesos de forma recursiva sobre la red para procesar entradas de tamaño variable?',
+    opts: ['Red Neuronal Convolucional (CNN)', 'Red Neuronal Recursiva (RNN)', 'Red Fully Connected', 'Red Generativa Adversaria (GAN)'],
+    correct: 1,
+    exp: 'Las <strong>RNN (Recurrent/Recursive Neural Networks)</strong> poseen bucles internos que les permiten almacenar un "estado" y procesar secuencias de datos de cualquier longitud, como texto o audio.'
+  },
+  {
+    tag: 't4',
+    text: '¿Cuántas capas de representación suelen utilizarse habitualmente en un modelo de Deep Learning?',
+    opts: ['Entre 1 y 3 capas', 'Exactamente 10 capas siempre', 'Decenas o incluso cientos de capas ocultas', 'Una única capa oculta'],
+    correct: 2,
+    exp: 'El término "Deep" (Profundo) hace alusión directa a su profundidad arquitectónica, consistiendo en <strong>decenas o cientos de capas</strong> (por ejemplo, ResNet-152 tiene 152 capas).'
+  },
+  {
+    tag: 't4',
+    text: '¿Cuál de los siguientes es un caso de éxito destacado de Deep Learning con aprendizaje por refuerzo?',
+    opts: ['La detección de spam en correos electrónicos mediante regresión logística', 'La red DQN aplicada a juegos de Atari', 'El uso de Hadoop para procesar grandes volúmenes de datos', 'La clasificación de imágenes médicas mediante aprendizaje supervisado clásico'],
+    correct: 1,
+    exp: 'DeepMind combinó Deep Learning con Reinforcement Learning para crear <strong>DQN (Deep Q-Network)</strong>, un algoritmo capaz de superar el rendimiento humano en juegos clásicos de Atari aprendiendo solo desde los píxeles.'
+  },
+  {
+    tag: 't4',
+    text: '¿A qué ámbito pertenece el caso de éxito de AlphaGo de Google?',
+    opts: ['Detección de tumores en imágenes médicas', 'Traducción automática de idiomas', 'Derrota al maestro mundial del juego de Go mediante Deep Reinforcement Learning', 'Conducción autónoma de vehículos en autopista'],
+    correct: 2,
+    exp: '<strong>AlphaGo</strong> hizo historia en 2016 al vencer al campeón mundial Lee Sedol jugando al Go, un logro que se creía imposible hasta décadas más tarde, usando Deep Reinforcement Learning.'
+  },
+  {
+    tag: 't4',
+    text: '¿Qué tienen en común los cinco principales frameworks de Deep Learning mencionados en el tema?',
+    opts: ['Todos están implementados en Java', 'Todos soportan CUDA y tienen modelos pre-entrenados', 'Todos son desarrollados por Google', 'Todos son APIs de alto nivel escritas en Python'],
+    correct: 1,
+    exp: 'Los frameworks modernos como TensorFlow o PyTorch están altamente optimizados, <strong>soportan aceleración por GPU (CUDA/cuDNN)</strong> y proveen bibliotecas ("Model Zoos") de modelos listos para usar.'
+  },
+  {
+    tag: 't4',
+    text: '¿Cuál de las siguientes afirmaciones sobre la Pooling Layer es correcta?',
+    opts: ['Aplica filtros convolucionales para extraer características de la imagen', 'Conecta todas las neuronas entre capas para producir la salida final', 'Puede usar funciones de agrupación como máximo, valor medio o suma', 'Entrena los pesos de la red mediante retropropagación'],
+    correct: 2,
+    exp: 'Las <strong>capas de Pooling</strong> submuestrean los mapas de características aplicando operaciones estadísticas simples a ventanas locales (ej: MaxPooling se queda con el valor máximo).'
+  },
+  {
+    tag: 't4',
+    text: '¿Qué tipo de datos de entrada aprovechan mejor las Redes Neuronales Convolucionales (CNN)?',
+    opts: ['Series temporales y texto secuencial', 'Datos tabulares estructurados en bases de datos relacionales', 'Imágenes y datos de voz', 'Grafos y datos de redes sociales'],
+    correct: 2,
+    exp: 'Las CNNs son ideales cuando los datos tienen dependencias espaciales o de rejilla, como las <strong>imágenes (píxeles cercanos están relacionados)</strong> o la voz procesada en espectrogramas.'
+  },
+  {
+    tag: 't4',
+    text: 'En el aprendizaje supervisado, ¿cuál es la diferencia entre clasificación y regresión?',
+    opts: ['La clasificación asigna un valor numérico continuo y la regresión asigna una categoría discreta', 'La clasificación asigna una categoría de un conjunto existente y la regresión asigna una variable numérica entre infinidad de resultados', 'No existe diferencia, ambas son técnicas equivalentes', 'La regresión solo se usa en aprendizaje no supervisado'],
+    correct: 1,
+    exp: 'En ML Supervisado, la <strong>clasificación predice etiquetas o clases fijas</strong> (ej. Perro, Gato), mientras que la <strong>regresión predice valores continuos</strong> (ej. 14.500€ de salario, 24.5°C).'
+  },
+  {
+    tag: 't4',
+    text: '¿Qué caracteriza al aprendizaje supervisado respecto al aprendizaje por refuerzo cuando hay una respuesta errónea?',
+    opts: ['El supervisado solo informa de que el comportamiento es erróneo y cuánto error se ha cometido', 'El supervisado indica exactamente lo que se tendría que haber respondido, mientras que el por refuerzo solo informa del error cometido', 'Ambos tipos indican exactamente la respuesta correcta en caso de error', 'El aprendizaje por refuerzo proporciona la respuesta correcta completa al algoritmo'],
+    correct: 1,
+    exp: 'En el <strong>aprendizaje supervisado</strong> contamos con la etiqueta real (conocemos la respuesta perfecta). En <strong>refuerzo</strong>, el agente solo recibe un castigo (o recompensa negativa) y tiene que explorar por su cuenta hasta hallar la acción óptima.'
+  },
+  {
+    tag: 't4',
+    text: '¿Qué lenguajes soporta el framework Caffe además de C y C++?',
+    opts: ['Java y R', 'Python y Matlab', 'JavaScript y TypeScript', 'Scala y Kotlin'],
+    correct: 1,
+    exp: 'Caffe cuenta con interfaces en <strong>Python y Matlab</strong>, siendo muy popular en el ámbito de la investigación académica por su velocidad y eficiencia.'
+  },
+  {
+    tag: 't4',
+    text: '¿Con qué porcentaje de confianza clasificaba la red neuronal la imagen original del panda antes de añadir el ruido adversarial?',
+    opts: ['99%', '75%', '60%', '45%'],
+    correct: 2,
+    exp: 'La red clasificaba originalmente la imagen del panda con un <strong>60% de confianza</strong> antes del ataque adversarial.'
+  },
+  {
+    tag: 't4',
+    text: '¿Con qué porcentaje de confianza clasificó la red la imagen del panda como gibón tras añadir la perturbación?',
+    opts: ['60%', '75%', '80%', '99%'],
+    correct: 3,
+    exp: 'Tras sumar el ruido imperceptible, la red cambió drásticamente su predicción y clasificó el panda como un "gibón" con una confianza casi absoluta del <strong>99%</strong>.'
+  },
+  {
+    tag: 't4',
+    text: '¿Qué es un sistema BCI (Brain Computer Interface)?',
+    opts: ['Un framework de Deep Learning especializado en procesamiento de voz', 'Un tipo de red neuronal convolucional para imágenes médicas', 'Un sistema que permite controlar dispositivos mediante señales cerebrales, como una silla de ruedas', 'Un algoritmo de aprendizaje por refuerzo aplicado a videojuegos'],
+    correct: 2,
+    exp: 'Un <strong>sistema BCI (Brain Computer Interface)</strong> traduce la actividad eléctrica del cerebro en comandos, permitiendo por ejemplo controlar una silla de ruedas sin movimiento físico.'
+  },
+  {
+    tag: 't4',
+    text: '¿Qué tecnología de aceleración por GPU soportan los cinco principales frameworks de Deep Learning mencionados en el tema?',
+    opts: ['OpenCL', 'DirectX', 'CUDA', 'Vulkan'],
+    correct: 2,
+    exp: 'Todos soportan la arquitectura <strong>CUDA</strong> de NVIDIA, lo que permite realizar el entrenamiento intensivo en paralelo utilizando la potencia de la GPU.'
+  },
+  {
+    tag: 't4',
+    text: '¿Qué ventaja ofrecen los modelos pre-entrenados disponibles en los frameworks de Deep Learning?',
+    opts: ['Eliminan la necesidad de usar GPU para el entrenamiento', 'Permiten partir de modelos ya entrenados sin tener que empezar desde cero', 'Garantizan que el modelo no pueda ser engañado con ejemplos adversariales', 'Permiten ejecutar el modelo sin necesidad de datos de entrada'],
+    correct: 1,
+    exp: 'Utilizar <strong>modelos pre-entrenados</strong> ahorra una inmensa cantidad de tiempo y recursos computacionales, aplicando el concepto de "Transfer Learning" (aprendizaje transferido).'
+  },
+  {
+    tag: 't4',
+    text: '¿Cuál de los siguientes frameworks de Deep Learning es el más recomendado para comenzar a aprender según el tema?',
+    opts: ['Tensorflow', 'PyTorch', 'Keras', 'Caffe'],
+    correct: 2,
+    exp: '<strong>Keras</strong> es una API de alto nivel (ahora integrada dentro de TensorFlow) diseñada para facilitar la creación rápida de modelos, lo que la hace ideal para principiantes.'
+  },
+  {
+    tag: 't4',
+    text: '¿Por qué se considera que Tensorflow es complejo para principiantes?',
+    opts: ['Porque está implementado en Java y requiere conocer ese lenguaje', 'Porque solo funciona con imágenes y no con otros tipos de datos', 'Porque si no se tienen conocimientos de Machine Learning y conceptos matemáticos, el aprendizaje se hace bastante complejo', 'Porque no dispone de modelos pre-entrenados'],
+    correct: 2,
+    exp: '<strong>TensorFlow</strong> ofrece un control de muy bajo nivel, requiriendo un buen entendimiento previo de grafos computacionales, álgebra lineal y conceptos de ML.'
+  },
+  {
+    tag: 't4',
+    text: '¿Qué ventaja tiene PyTorch respecto a Tensorflow según el tema?',
+    opts: ['Está desarrollado por Google y tiene mayor respaldo empresarial', 'Es mucho más intuitivo que Tensorflow', 'Está especializado en procesamiento de imágenes médicas', 'Está implementado en Java y se integra con Hadoop'],
+    correct: 1,
+    exp: 'Creado por Facebook (Meta), <strong>PyTorch</strong> es considerado a menudo más <strong>intuitivo</strong> y "pythonico", facilitando la depuración y experimentación dinámica respecto a TensorFlow.'
+  },
+  {
+    tag: 't4',
+    text: '¿En qué se basa el proyecto DARPA relacionado con Deep Learning?',
+    opts: ['En la detección de tumores en imágenes histológicas', 'En el desarrollo de interfaces cerebro-computadora', 'En máquinas que aprenden con la experiencia, aplicado a vehículos de conducción autónoma', 'En la creación de redes generativas para síntesis de imágenes'],
+    correct: 2,
+    exp: 'DARPA ha invertido en desarrollar vehículos y sistemas autónomos, basándose en la idea de crear <strong>máquinas que puedan aprender de sus experiencias</strong> en entornos reales mediante ML/DL.'
+  },
+  {
+    tag: 't4',
+    text: '¿Qué ocurre cuando se añade ruido imperceptible a una imagen de entrada en una red de Deep Learning?',
+    opts: ['La red mejora su precisión al recibir más información', 'La red puede clasificar la imagen de forma completamente errónea con alta confianza', 'La red rechaza la imagen y no produce ninguna salida', 'La red reduce el número de capas utilizadas en el procesamiento'],
+    correct: 1,
+    exp: 'Este fenómeno, conocido como ataque adversarial, hace que la red prediga una <strong>clase equivocada con extrema confianza</strong> debido a perturbaciones calculadas en los píxeles.'
+  },
+  {
+    tag: 't4',
+    text: '¿Cuál de las siguientes afirmaciones describe correctamente una RNN?',
+    opts: ['Aplica filtros convolucionales recursivamente sobre imágenes de entrada', 'Aplica el mismo conjunto de pesos recursivamente sobre la red para procesar datos de entrada de tamaño variable donde el orden importa', 'Conecta todas las neuronas entre sí para producir una salida mediante softmax', 'Reduce la dimensionalidad de los datos agrupando características comunes'],
+    correct: 1,
+    exp: 'Las <strong>Recurrent Neural Networks (RNN)</strong> tienen un estado o "memoria" interna, aplicando los mismos pesos a cada elemento de una secuencia (como texto o audio) temporal.'
+  },
+  {
+    tag: 't4',
+    text: '¿Cuál es la principal diferencia entre el aprendizaje no supervisado y el supervisado en cuanto a los datos?',
+    opts: ['El no supervisado utiliza datos etiquetados y el supervisado no', 'El supervisado utiliza datos etiquetados mientras que el no supervisado solo conoce los datos de entrada sin etiquetas de salida', 'Ambos requieren datos etiquetados pero con diferente formato', 'El no supervisado requiere más datos de salida que el supervisado'],
+    correct: 1,
+    exp: 'El <strong>Aprendizaje Supervisado</strong> entrena con la "respuesta correcta" (etiquetas), mientras que el <strong>No Supervisado</strong> intenta descubrir la estructura oculta de datos no etiquetados (ej. clustering).'
+  },
+  {
+    tag: 't4',
+    text: '¿Qué tipo de aprendizaje se usa cuando un algoritmo aprende a jugar a videojuegos como los de Atari?',
+    opts: ['Aprendizaje supervisado', 'Aprendizaje no supervisado', 'Aprendizaje por refuerzo', 'Aprendizaje semi-supervisado'],
+    correct: 2,
+    exp: 'En el <strong>Aprendizaje por Refuerzo (Reinforcement Learning)</strong>, un agente interactúa con el entorno del juego e intenta maximizar su puntuación (recompensa) con cada acción.'
+  },
+  {
+    tag: 't4',
+    text: '¿Qué tipo de problema resuelven principalmente las redes LSTM?',
+    opts: ['Clasificación de imágenes en tiempo real', 'Agrupación de datos no etiquetados mediante clustering', 'Predicción de series temporales', 'Detección de objetos en vídeo'],
+    correct: 2,
+    exp: 'Las <strong>LSTM (Long Short-Term Memory)</strong> son una variante de las RNN diseñadas para recordar dependencias a largo plazo, siendo excelentes en <strong>predicción de series temporales</strong> y PNL.'
+  }
+];
+
+// State
+let answered = new Set();
+let correctCount = 0;
+let wrongCount = 0;
+let currentFilter = 'all';
+
+function buildQuiz(filter) {
+  const container = document.getElementById('quiz-container');
+  container.innerHTML = '';
+
+  let filtered = questions.filter(q => filter === 'all' || q.tag === filter);
+  let lastSection = '';
+  let num = 0;
+
+  filtered.forEach((q, idx) => {
+    num++;
+    const globalIdx = questions.indexOf(q);
+
+    // Section divider
+    if (q.section && q.section !== lastSection) {
+      lastSection = q.section;
+      const tag = q.tag;
+      const div = document.createElement('div');
+      div.className = 'section-div';
+      div.innerHTML = `<div class="section-div-line"></div><span class="section-div-label ${tag}">${q.section}</span><div class="section-div-line"></div>`;
+      container.appendChild(div);
+    }
+
+    const card = document.createElement('div');
+    card.className = 'q-card';
+    card.id = `card-${globalIdx}`;
+
+    const state = answered.get ? answered.get(globalIdx) : null;
+    if (answered.has && answered.has(globalIdx)) {
+      const isCorrect = answeredMap[globalIdx] === q.correct;
+      card.classList.add(isCorrect ? 'answered-correct' : 'answered-wrong');
+    }
+
+    const optsHTML = q.opts.map((o, i) => {
+      const letters = ['a', 'b', 'c', 'd'];
+      let cls = 'opt-btn';
+      if (answeredMap[globalIdx] !== undefined) {
+        if (i === q.correct) cls += ' correct-ans';
+        else if (i === answeredMap[globalIdx] && answeredMap[globalIdx] !== q.correct) cls += ' wrong-ans';
+        else cls += ' dimmed';
+      }
+      return `<button class="${cls}" onclick="answer(${globalIdx}, ${i})" ${answeredMap[globalIdx] !== undefined ? 'disabled' : ''}>
+        <span class="opt-letter">${letters[i]}</span>
+        <span>${o}</span>
+      </button>`;
+    }).join('');
+
+    let expClass = '';
+    let expShow = '';
+    if (answeredMap[globalIdx] !== undefined) {
+      const correct = answeredMap[globalIdx] === q.correct;
+      expClass = correct ? 'correct' : 'wrong';
+      expShow = 'show';
+    }
+
+    card.innerHTML = `
+      <div class="q-header">
+        <span class="q-num">#${num}</span>
+        <span class="q-tag ${q.tag}">${q.tag === 'p1' ? 'Práctica 1' : q.tag === 'p2' ? 'Práctica 2' : q.tag === 't3' ? 'Tema 3' : 'Tema 4'}</span>
+        <span class="q-text">${q.text}</span>
+      </div>
+      <div class="q-options">${optsHTML}</div>
+      <div class="explanation ${expClass} ${expShow}" id="exp-${globalIdx}">
+        ${answeredMap[globalIdx] !== undefined ? (answeredMap[globalIdx] === q.correct ? '✅ Correcto. ' : '❌ Incorrecto. ') + q.exp : q.exp}
+      </div>
+    `;
+
+    container.appendChild(card);
+  });
+
+  updateScore(filter);
+}
+
+const answeredMap = {};
+
+function answer(qIdx, optIdx) {
+  if (answeredMap[qIdx] !== undefined) return;
+  answeredMap[qIdx] = optIdx;
+
+  const q = questions[qIdx];
+  const card = document.getElementById(`card-${qIdx}`);
+  const buttons = card.querySelectorAll('.opt-btn');
+  const exp = document.getElementById(`exp-${qIdx}`);
+
+  const isCorrect = optIdx === q.correct;
+
+  buttons.forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === q.correct) {
+      btn.classList.add('correct-ans');
+      btn.querySelector('.opt-letter').style.background = 'var(--correct)';
+      btn.querySelector('.opt-letter').style.color = 'white';
+    } else if (i === optIdx && !isCorrect) {
+      btn.classList.add('wrong-ans');
+      btn.querySelector('.opt-letter').style.background = 'var(--wrong)';
+      btn.querySelector('.opt-letter').style.color = 'white';
+    }
+  });
+
+  if (isCorrect) {
+    card.classList.add('answered-correct');
+    exp.className = 'explanation correct show';
+    exp.innerHTML = '✅ Correcto. ' + q.exp;
+    correctCount++;
+  } else {
+    card.classList.add('answered-wrong');
+    exp.className = 'explanation wrong show';
+    exp.innerHTML = '❌ Incorrecto. ' + q.exp;
+    wrongCount++;
+  }
+
+  updateScore(currentFilter);
+
+  // Scroll to next
+  setTimeout(() => {
+    const allCards = document.querySelectorAll('.q-card:not(.answered-correct):not(.answered-wrong)');
+    if (allCards.length > 0) {
+      allCards[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, 600);
+}
+
+function updateScore(filter) {
+  const filtered = questions.filter(q => filter === 'all' || q.tag === filter);
+  const total = filtered.length;
+  const answeredCount = filtered.filter(q => answeredMap[questions.indexOf(q)] !== undefined).length;
+  const correct = filtered.filter(q => answeredMap[questions.indexOf(q)] === q.correct).length;
+  const wrong = answeredCount - correct;
+  const pct = answeredCount > 0 ? Math.round((correct / answeredCount) * 100) : 0;
+
+  document.getElementById('s-total').textContent = answeredCount;
+  document.getElementById('s-correct').textContent = correct;
+  document.getElementById('s-wrong').textContent = wrong;
+  document.getElementById('s-pct').textContent = pct + '%';
+  document.getElementById('progress-fill').style.width = (answeredCount / total * 100) + '%';
+
+  if (answeredCount === total && total > 0) {
+    showFinalResult(correct, total);
+  }
+}
+
+function showFinalResult(correct, total) {
+  const pct = Math.round((correct / total) * 100);
+  let grade, emoji;
+  if (pct >= 90) { grade = '10 🏆'; emoji = '¡Sobresaliente! Estás listo para el examen.'; }
+  else if (pct >= 80) { grade = '8-9 🎉'; emoji = 'Notable. Repasa los errores y estarás perfecto.'; }
+  else if (pct >= 70) { grade = '7 📚'; emoji = 'Bien, pero hay que repasar algunos conceptos.'; }
+    else if (pct >= 60) { grade = '6 🔄'; emoji = 'Suficiente. Necesitas repasar bastante.'; }
+  else { grade = '< 5 ⚠️'; emoji = 'Hay que estudiar más. ¡Tú puedes!'; }
+
+  let existing = document.getElementById('final-result');
+  if (!existing) {
+    existing = document.createElement('div');
+    existing.id = 'final-result';
+    document.getElementById('quiz-container').appendChild(existing);
+  }
+  existing.style.display = 'block';
+  existing.innerHTML = `
+    <h2>¡Test completado!</h2>
+    <div class="grade">${grade}</div>
+    <p>${correct} de ${total} preguntas correctas (${pct}%)</p>
+    <p style="margin-top:0.5rem">${emoji}</p>
+    <button class="btn-retry" onclick="resetAll()">↺ Volver a intentarlo</button>
+  `;
+  existing.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function filterQuestions(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    b.className = 'filter-btn';
+  });
+  btn.classList.add(`active-${filter}`);
+  buildQuiz(filter);
+}
+
+function resetAll() {
+  Object.keys(answeredMap).forEach(k => delete answeredMap[k]);
+  correctCount = 0;
+  wrongCount = 0;
+  const fr = document.getElementById('final-result');
+  if (fr) fr.style.display = 'none';
+  buildQuiz(currentFilter);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Init
+buildQuiz('all');
+</script>
+</body>
+</html>
