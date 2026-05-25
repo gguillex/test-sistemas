@@ -166,8 +166,36 @@ body {
 .filter-btn.active-t3 { background: var(--t3); color: white; border-color: var(--t3); }
 .filter-btn.active-t4 { background: var(--t4); color: white; border-color: var(--t4); }
 
-.btn-reset {
+.btn-reveal {
   margin-left: auto;
+  padding: 0.35rem 1rem;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--ink2);
+  font-size: 0.8rem;
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-reveal:hover { background: var(--correct-bg); border-color: var(--correct); color: var(--correct); }
+
+.btn-shuffle {
+  padding: 0.35rem 1rem;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--ink2);
+  font-size: 0.8rem;
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-shuffle:hover { background: #e3eefe; border-color: var(--p2); color: var(--p2); }
+
+.btn-reset {
   padding: 0.35rem 1rem;
   border-radius: 8px;
   border: 1.5px solid var(--border);
@@ -456,6 +484,8 @@ code {
   <button class="filter-btn" onclick="filterQuestions('p2', this)">Práctica 2</button>
   <button class="filter-btn" onclick="filterQuestions('t3', this)">Tema 3</button>
   <button class="filter-btn" onclick="filterQuestions('t4', this)">Tema 4</button>
+  <button class="btn-reveal" onclick="revealAll()">👁️ Mostrar soluciones</button>
+  <button class="btn-shuffle" onclick="shuffleAndReset()">🔀 Mezclar</button>
   <button class="btn-reset" onclick="resetAll()">↺ Reiniciar todo</button>
 </div>
 
@@ -2274,7 +2304,7 @@ function buildQuiz(filter) {
     const globalIdx = questions.indexOf(q);
 
     // Section divider
-    if (q.section && q.section !== lastSection) {
+    if (!isShuffled && q.section && q.section !== lastSection) {
       lastSection = q.section;
       const tag = q.tag;
       const div = document.createElement('div');
@@ -2287,8 +2317,7 @@ function buildQuiz(filter) {
     card.className = 'q-card';
     card.id = `card-${globalIdx}`;
 
-    const state = answered.get ? answered.get(globalIdx) : null;
-    if (answered.has && answered.has(globalIdx)) {
+    if (answeredMap[globalIdx] !== undefined) {
       const isCorrect = answeredMap[globalIdx] === q.correct;
       card.classList.add(isCorrect ? 'answered-correct' : 'answered-wrong');
     }
@@ -2437,6 +2466,12 @@ function filterQuestions(filter, btn) {
 }
 
 function resetAll() {
+  if (Object.keys(answeredMap).length > 0) {
+    if (!confirm('¿Seguro que quieres reiniciar todo el progreso y restablecer el orden?')) return;
+  }
+  
+  isShuffled = false;
+  questions.sort((a, b) => a._origIdx - b._origIdx);
   Object.keys(answeredMap).forEach(k => delete answeredMap[k]);
   correctCount = 0;
   wrongCount = 0;
@@ -2446,7 +2481,40 @@ function resetAll() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+function revealAll() {
+  questions.forEach((q, idx) => {
+    if (answeredMap[idx] === undefined) {
+      answeredMap[idx] = q.correct;
+    }
+  });
+  
+  buildQuiz(currentFilter);
+}
+
+function shuffleAndReset() {
+  if (Object.keys(answeredMap).length > 0) {
+    if (!confirm('¿Seguro que quieres mezclar las preguntas? Esto reiniciará tu progreso actual.')) return;
+  }
+  
+  isShuffled = true;
+  for (let i = questions.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [questions[i], questions[j]] = [questions[j], questions[i]];
+  }
+  
+  Object.keys(answeredMap).forEach(k => delete answeredMap[k]);
+  correctCount = 0;
+  wrongCount = 0;
+  const fr = document.getElementById('final-result');
+  if (fr) fr.style.display = 'none';
+  
+  buildQuiz(currentFilter);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 // Init
+let isShuffled = false;
+questions.forEach((q, i) => q._origIdx = i);
 buildQuiz('all');
 </script>
 </body>
